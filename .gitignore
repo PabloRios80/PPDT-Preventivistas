@@ -1,0 +1,5 @@
+#Ignorar el archivo de variables de entorno (claves secretas)
+.env
+
+# Ignorar la carpeta de dependencias de Node.js
+node_modules

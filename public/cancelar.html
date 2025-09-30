@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cancelar Turno - IAPOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #f0f8ff; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
+        .container { background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #005A9C; }
+    </style>
+</head>
+<body>
+    <div class="container" id="message-box">
+        <h1>Procesando cancelación...</h1>
+    </div>
+    <script>
+        window.onload = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const eventId = params.get('id');
+            const messageBox = document.getElementById('message-box');
+
+            if (!eventId) {
+                messageBox.innerHTML = '<h1>Error</h1><p>Falta el identificador del turno.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/cancelar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ eventId: eventId })
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    messageBox.innerHTML = '<h1>¡Turno Cancelado!</h1><p>Tu turno ha sido cancelado exitosamente y ya se encuentra disponible para otros afiliados.</p>';
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                messageBox.innerHTML = `<h1>Error</h1><p>${error.message || 'No se pudo procesar la solicitud.'}</p>`;
+            }
+        };
+    </script>
+</body>
+</html>

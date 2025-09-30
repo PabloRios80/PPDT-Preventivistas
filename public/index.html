@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnos Día Preventivo - IAPOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Tus estilos CSS completos aquí */
+        body { font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; background-color: #f0f8ff; color: #333; display: flex; justify-content: center; }
+        .container { background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 30px; max-width: 800px; width: 100%; text-align: center; box-sizing: border-box; }
+        .highlight { color: #005A9C; font-weight: 700; }
+        .header-banner { background-color: #005A9C; color: white; padding: 15px 30px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; margin: -30px -30px 30px -30px; }
+        .header-banner h1 { font-size: 2em; color: white; margin: 0; border: none; }
+        .header-banner img { height: 50px; max-width: 150px; }
+        main h2 { color: #009A44; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px; }
+        #intro-section p { font-size: 1.2em; line-height: 1.6; margin-bottom: 30px; }
+        .cta-button { background-color: #009A44; color: white; border: none; border-radius: 50px; padding: 15px 30px; font-size: 1.2em; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 154, 68, 0.3); }
+        .cta-button:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 154, 68, 0.4); }
+        .admin-button { background-color: white; color: #005A9C; padding: 8px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: background-color 0.3s; }
+        .admin-button:hover { background-color: #f0f8ff; }
+        .action-button { padding: 10px 20px; border-radius: 5px; text-decoration: none; color: white; font-weight: bold; cursor: pointer; border: none; }
+        .btn-gray { background-color: #6c757d; }
+        .calendario { margin-bottom: 20px; }
+        .calendario h3 { text-transform: capitalize; color: #005A9C; }
+        .calendario table { width: 100%; border-collapse: collapse; }
+        .calendario th { padding: 10px; font-size: 0.9em; color: #666; }
+        .calendario td { padding: 5px; text-align: center; }
+        .dia-disponible { background-color: #005A9C; color: white; border: none; cursor: pointer; transition: transform 0.2s; display: inline-block; width: 40px; height: 40px; line-height: 40px; border-radius: 50%; }
+        .dia-disponible:hover { transform: scale(1.1); }
+        .dia-disponible.seleccionado { background-color: #009A44; outline: 2px solid #00447e; }
+        .dia-no-disponible { color: #ccc; display: inline-block; width: 40px; height: 40px; line-height: 40px; border-radius: 50%; }
+        .hoy { font-weight: bold; border: 2px solid #009A44; }
+        #titulo-horarios { text-transform: capitalize; color: #333; font-size: 1.1em; margin-bottom: 15px; font-weight: bold; }
+        .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        .slot-button { background-color: #005A9C; color: white; border: none; padding: 15px 10px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; font-weight: 700; }
+        #formulario-reserva { background-color: #e6f7ff; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        #formulario-reserva input { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        #formulario-reserva button { background-color: #009A44; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; }
+        .hidden { display: none; }
+        #mensaje { padding: 15px; margin-top: 20px; border-radius: 5px; font-weight: bold; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        #loading { font-size: 1.2em; color: #005A9C; }
+        .button-link { display: inline-block; margin-top: 15px; padding: 10px 20px; background-color: #005A9C; color: white; text-decoration: none; font-weight: bold; border-radius: 5px; }
+        .instructions { border-left: 5px solid #005A9C; padding: 0.1em 1em; }
+        .instructions ul { list-style-position: inside; padding-left: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-banner">
+                <h1>Día Preventivo</h1>
+                <div>
+                    <a href="login.html" class="admin-button">Preventivistas</a>
+                    <img src="logo_iapos.png" alt="Logo IAPOS" style="height: 50px; margin-left: 15px;">
+                </div>
+            </div>
+        </header>
+        <main>
+            <div id="intro-section">
+                <p>El <span class="highlight">Día Preventivo</span> es un programa de IAPOS que de manera personalizada y rápido te invita a realizar las principales practicas y estudios preventivos según tu edad, sexo y riesgo personal. Es <span class="highlight">totalmente gratuito</span> para nuestros afiliados.</p>
+                <p><strong>Empieza a cuidarte ahora y saca un turno aquí:</strong></p>
+                <button id="show-turnera-btn" class="cta-button">
+                    Turnos para hacerse el Día Preventivo
+                </button>
+            </div>
+            <div id="turnera-wrapper" class="hidden">
+                <h2 id="titulo-seleccion-dia">1. Selecciona un día en el calendario</h2>
+                <p id="subtitulo-seleccion-dia">Los días marcados en <span class="highlight">azul</span> tienen turnos disponibles.</p>
+                
+                <div id="loading">Cargando turnos disponibles...</div>
+                <div id="calendarios-container"></div>
+                
+                <div id="horarios-container" class="hidden">
+                    <hr style="margin: 30px 0;">
+                    <h2>2. Selecciona un horario</h2>
+                    <h3 id="titulo-horarios"></h3>
+                    <div id="slots-disponibles" class="slots-grid"></div>
+                </div>
+                <div id="formulario-reserva" class="hidden">
+                    <hr style="margin: 30px 0;">
+                    <h2>3. Completa tus datos para confirmar</h2>
+                    <p id="turno-seleccionado-info" style="font-weight:bold; margin-bottom:15px;"></p>
+                    <form id="booking-form">
+                        <input type="hidden" id="slotId" name="slotId">
+                        <input type="text" id="nombre" name="nombre" placeholder="Nombre" required>
+                        <input type="text" id="apellido" name="apellido" placeholder="Apellido" required>
+                        <input type="text" id="dni" name="dni" placeholder="DNI (sin puntos)" required pattern="\d{7,8}">
+                        <input type="email" id="email" name="email" placeholder="Email para recibir la confirmación" required>
+                        <input type="tel" id="whatsapp" name="whatsapp" placeholder="Teléfono (ej: 3421234567)" required pattern="[0-9]{10}" title="Debe contener 10 dígitos, sin 0, sin 15 y sin espacios. Ejemplo: 3421234567">
+                        <button type="submit">Confirmar Turno</button>
+                    </form>
+                </div>
+            </div>
+            <div id="mensaje" class="hidden"></div>
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- CÓDIGO NUEVO PARA MOSTRAR LA TURNERA DIRECTAMENTE ---
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('accion') === 'mostrarTurnera') {
+            const introSection = document.getElementById('intro-section');
+            const turneraWrapper = document.getElementById('turnera-wrapper');
+            if (introSection) introSection.classList.add('hidden');
+            if (turneraWrapper) turneraWrapper.classList.remove('hidden');
+        }
+        const introSection = document.getElementById('intro-section');
+        const turneraWrapper = document.getElementById('turnera-wrapper');
+        const showTurneraBtn = document.getElementById('show-turnera-btn');
+        const loadingDiv = document.getElementById('loading');
+        const calendariosContainer = document.getElementById('calendarios-container');
+        const horariosContainer = document.getElementById('horarios-container');
+        const slotsDisponiblesDiv = document.getElementById('slots-disponibles');
+        const formContainer = document.getElementById('formulario-reserva');
+        const bookingForm = document.getElementById('booking-form');
+        const mensajeDiv = document.getElementById('mensaje');
+        let turnosDisponibles = [];
+        const dniInput = bookingForm.querySelector('#dni');
+        const nombreInput = bookingForm.querySelector('#nombre');
+        const apellidoInput = bookingForm.querySelector('#apellido');
+        const emailInput = bookingForm.querySelector('#email');
+        const whatsappInput = bookingForm.querySelector('#whatsapp');
+
+        dniInput.addEventListener('blur', async () => {
+            const dni = dniInput.value.trim();
+            if (dni.length >= 7) {
+                try {
+                    const response = await fetch(`/api/usuario/${dni}`);
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        const confirmacion = confirm(`Hemos encontrado datos para este DNI:\n\nNombre: ${result.data.nombre}\nApellido: ${result.data.apellido}\n\n¿Desea utilizarlos para autocompletar el formulario?`);
+                        if (confirmacion) {
+                            nombreInput.value = result.data.nombre || '';
+                            apellidoInput.value = result.data.apellido || '';
+                            emailInput.value = result.data.email || '';
+                            whatsappInput.value = result.data.telefono || '';
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error buscando DNI:", error);
+                }
+            }
+        });
+
+        showTurneraBtn.addEventListener('click', () => {
+            introSection.classList.add('hidden');
+            turneraWrapper.classList.remove('hidden');
+            turneraWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        function mostrarHorariosPara(fecha) {
+            const turnosDelDia = turnosDisponibles.filter(slot => new Date(slot.time).toISOString().startsWith(fecha));
+            let html = '';
+            const fechaObj = new Date(fecha + 'T00:00:00');
+            document.getElementById('titulo-horarios').textContent = fechaObj.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            turnosDelDia.forEach(slot => {
+                const horaObj = new Date(slot.time);
+                const hora = horaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const infoCompleta = `${fechaObj.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })} a las ${hora} hs`;
+                html += `<button class="slot-button" data-id="${slot.id}" data-info="${infoCompleta}">${hora}</button>`;
+            });
+            slotsDisponiblesDiv.innerHTML = html;
+            horariosContainer.classList.remove('hidden');
+            formContainer.classList.add('hidden');
+        }
+
+        async function iniciarTurnera() {
+            try {
+                const response = await fetch('/api/turnos');
+                const data = await response.json();
+                loadingDiv.classList.add('hidden');
+                if (data.status === 'success' && data.slots.length > 0) {
+                    turnosDisponibles = data.slots;
+                    const diasConTurnos = new Set(turnosDisponibles.map(slot => new Date(slot.time).toISOString().split('T')[0]));
+                    calendariosContainer.innerHTML = '';
+                    const hoy = new Date();
+                    for (let i = 0; i < 2; i++) {
+                        const fecha = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+                        const mes = fecha.getMonth();
+                        const anio = fecha.getFullYear();
+                        let calendarioHTML = `<div class="calendario"><h3>${fecha.toLocaleString('es-AR', { month: 'long', year: 'numeric' })}</h3><table><thead><tr><th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th></tr></thead><tbody>`;
+                        let primerDia = new Date(anio, mes, 1).getDay();
+                        let diasEnMes = new Date(anio, mes + 1, 0).getDate();
+                        let fechaCelda = 1;
+                        for (let j = 0; j < 6; j++) {
+                            calendarioHTML += '<tr>';
+                            for (let k = 0; k < 7; k++) {
+                                if (j === 0 && k < primerDia || fechaCelda > diasEnMes) {
+                                    calendarioHTML += '<td></td>';
+                                } else {
+                                    const fechaCompleta = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(fechaCelda).padStart(2, '0')}`;
+                                    const esHoy = new Date().toISOString().split('T')[0] === fechaCompleta;
+                                    if (diasConTurnos.has(fechaCompleta)) {
+                                        calendarioHTML += `<td><button class="dia-disponible ${esHoy ? 'hoy' : ''}" data-fecha="${fechaCompleta}">${fechaCelda}</button></td>`;
+                                    } else {
+                                        calendarioHTML += `<td><span class="dia-no-disponible ${esHoy ? 'hoy' : ''}">${fechaCelda}</span></td>`;
+                                    }
+                                    fechaCelda++;
+                                }
+                            }
+                            calendarioHTML += '</tr>';
+                            if (fechaCelda > diasEnMes) break;
+                        }
+                        calendarioHTML += '</tbody></table></div>';
+                        calendariosContainer.innerHTML += calendarioHTML;
+                    }
+                } else {
+                    calendariosContainer.innerHTML = '<p>No hay turnos disponibles en este momento.</p>';
+                }
+            } catch (error) {
+                loadingDiv.textContent = 'Error al cargar los turnos.';
+            }
+        }
+        
+        calendariosContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('dia-disponible')) {
+                const fechaSeleccionada = e.target.dataset.fecha;
+                mostrarHorariosPara(fechaSeleccionada);
+                document.querySelectorAll('.dia-disponible').forEach(btn => btn.classList.remove('seleccionado'));
+                e.target.classList.add('seleccionado');
+                document.getElementById('horarios-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+        
+        slotsDisponiblesDiv.addEventListener('click', (e) => {
+            if (e.target.classList.contains('slot-button')) {
+                document.getElementById('slotId').value = e.target.dataset.id;
+                document.getElementById('turno-seleccionado-info').textContent = `Turno seleccionado: ${e.target.dataset.info}`;
+                formContainer.classList.remove('hidden');
+                bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        bookingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(bookingForm);
+            const data = Object.fromEntries(formData.entries());
+            const submitButton = bookingForm.querySelector('button');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Confirmando...';
+
+            try {
+                const response = await fetch('/api/reservar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Ocultamos el contenedor principal de la turnera
+                    const turneraWrapper = document.getElementById('turnera-wrapper');
+                    if (turneraWrapper) {
+                        turneraWrapper.classList.add('hidden');
+                    }
+                    
+                    // Mostramos el mensaje de éxito
+                    mensajeDiv.classList.remove('hidden');
+                    mensajeDiv.className = 'success';
+                    mensajeDiv.innerHTML = `
+                        <h2>¡Turno confirmado con éxito!</h2>
+                        <p>Hemos guardado tu turno y te enviaremos una confirmación por email.</p>
+                        <div class="instructions" style="margin-top: 20px; text-align: left;">
+                            <h3 style="color: #DD6B20; margin-top:0;">INSTRUCCIONES IMPORTANTES:</h3>
+                            <ul>
+                                <li>Vení en <strong>AYUNO de al menos 12hs</strong>.</li>
+                                <li>Si sos <strong>FUMADOR/A</strong>, no fumes al menos una hora antes.</li>
+                                <li>Si usás <strong>lentes</strong>, traelos.</li>
+                                <br>
+                                <li><strong>Dirección:</strong> San Martín 3145, Santa Fe, Capital</li>
+                                <li><strong>WhatsApp de Contacto:</strong> 342 4071702</li>
+                            </ul>
+                        </div>
+                        <p style="margin-top: 20px;">Como siguiente paso, podés completar tu <strong>Hoja de Vida Preventiva</strong>.</p>
+                        <a href="https://hoja-de-vida-iapos.onrender.com" target="_blank" class="button-link">Completar Hoja de Vida</a>
+                        <button id="exit-btn" class="action-button btn-gray" style="margin-top: 20px; margin-left: 10px;">Salir</button>
+                    `;
+                    
+                    document.getElementById('exit-btn').addEventListener('click', () => {
+                        window.location.reload();
+                    });
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                mensajeDiv.classList.remove('hidden');
+                mensajeDiv.className = 'error';
+                mensajeDiv.innerHTML = `<h2>Error al reservar</h2><p>${error.message || 'Error de conexión.'}</p><p>Por favor, recarga la página e intenta de nuevo.</p>`;
+                submitButton.disabled = false;
+                submitButton.textContent = 'Confirmar Turno';
+            }
+        });
+
+        iniciarTurnera();
+    });
+    </script>
+</body>
+</html>
