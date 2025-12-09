@@ -118,6 +118,28 @@ app.post('/api/cancelar', async (req, res) => {
     }
 });
 
+// Endpoint para agregar turnos manualmente (personalizados)
+app.post('/api/admin/agregar-turnos', async (req, res) => {
+    try {
+        // Recibimos: date, start, end, duration, city
+        console.log(`[Admin] Agregando turnos extra para: ${req.body.city}`);
+        
+        const response = await axios.post(APPS_SCRIPT_URL, {
+            action: 'createCustomSlots',
+            city: req.body.city, // Importante pasar la ciudad
+            date: req.body.date,
+            start: req.body.start,
+            end: req.body.end,
+            duration: req.body.duration
+        });
+        res.json(response.data);
+    } catch (error) {
+        console.error('Error adding custom slots:', error);
+        res.status(500).json({ status: 'error', message: 'Error al crear turnos.' });
+    }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor Preventivistas corriendo en http://localhost:${PORT}`);

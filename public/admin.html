@@ -66,11 +66,11 @@
                     <button id="logout-btn" class="action-button btn-gray" style="margin-left: 10px;">Salir</button>
                 </div>
             </div>
-
             <div class="tabs">
                 <button id="tab-turnos" class="tab-button active">Turnos Agendados</button>
                 <button id="tab-derivaciones" class="tab-button">Derivaciones</button>
                 <button id="tab-bloqueos" class="tab-button">Bloquear Días</button>
+                <button id="tab-agregar" class="tab-button">Agregar Días/Horarios</button>
             </div>
 
             <div id="vista-turnos" class="vista activa">
@@ -101,9 +101,39 @@
                 <h4>Días actualmente bloqueados:</h4>
                 <ul id="lista-dias-bloqueados"></ul>
             </div>
+                    <div id="vista-agregar" class="vista">
+    <h3>Agregar Disponibilidad Extra (<span class="ciudad-actual-label">Santa Fe</span>)</h3>
+    <p>Utiliza esta función para agregar días excepcionales (ej: Sábados) o extender horarios en días existentes.</p>
+
+    <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; max-width: 500px;">
+        <label style="display:block; margin-bottom:10px;">
+            <strong>Fecha:</strong>
+            <input type="date" id="add-date" style="width:100%; padding:8px; margin-top:5px;">
+        </label>
+
+        <div style="display:flex; gap:15px; margin-bottom:10px;">
+            <label style="flex:1;">
+                <strong>Hora Inicio:</strong>
+                <input type="time" id="add-start" value="08:00" style="width:100%; padding:8px; margin-top:5px;">
+            </label>
+            <label style="flex:1;">
+                <strong>Hora Fin:</strong>
+                <input type="time" id="add-end" value="12:00" style="width:100%; padding:8px; margin-top:5px;">
+            </label>
+        </div>
+
+        <label style="display:block; margin-bottom:20px;">
+            <strong>Duración del turno (minutos):</strong>
+            <input type="number" id="add-duration" value="10" style="width:100%; padding:8px; margin-top:5px;">
+        </label>
+
+        <button id="btn-generar-extra" class="action-button btn-green" style="width:100%;">Generar Turnos</button>
+    </div>
+</div>
+
+
         </main>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // 1. VERIFICACIÓN DE LOGIN
@@ -114,17 +144,23 @@
 
             // 2. REFERENCIAS A ELEMENTOS
             const logoutBtn = document.getElementById('logout-btn');
-            const citySelect = document.getElementById('city-select'); // Referencia al selector
-            const ciudadLabels = document.querySelectorAll('.ciudad-actual-label'); // Labels dinámicos
+            const citySelect = document.getElementById('city-select'); 
+            const ciudadLabels = document.querySelectorAll('.ciudad-actual-label'); 
             
+            // Tabs
             const tabTurnos = document.getElementById('tab-turnos');
             const tabDerivaciones = document.getElementById('tab-derivaciones');
             const tabBloqueos = document.getElementById('tab-bloqueos');
+            const tabAgregar = document.getElementById('tab-agregar'); // <--- NUEVO
+
+            // Vistas (Aquí agregamos la nueva vista 'agregar')
             const vistas = {
                 turnos: document.getElementById('vista-turnos'),
                 derivaciones: document.getElementById('vista-derivaciones'),
-                bloqueos: document.getElementById('vista-bloqueos')
+                bloqueos: document.getElementById('vista-bloqueos'),
+                agregar: document.getElementById('vista-agregar') // <--- NUEVO
             };
+
             const turnosTableBody = document.querySelector('#turnos-table tbody');
             const derivacionesTableBody = document.querySelector('#derivaciones-table tbody');
             const fechaInput = document.getElementById('fecha-a-bloquear');
@@ -132,7 +168,6 @@
             const listaDiasBloqueados = document.getElementById('lista-dias-bloqueados');
 
             // 3. CAMBIO DE CIUDAD
-            // Guardamos la preferencia en memoria para no perderla al recargar
             const ciudadGuardada = localStorage.getItem('admin-ciudad-preferida') || 'santafe';
             citySelect.value = ciudadGuardada;
             actualizarLabelsCiudad(ciudadGuardada);
@@ -141,7 +176,7 @@
                 const nuevaCiudad = e.target.value;
                 localStorage.setItem('admin-ciudad-preferida', nuevaCiudad);
                 actualizarLabelsCiudad(nuevaCiudad);
-                recargarDatos(); // Recargar todo al cambiar de ciudad
+                recargarDatos(); 
             });
 
             function actualizarLabelsCiudad(ciudad) {
@@ -152,34 +187,46 @@
             function recargarDatos() {
                 cargarTurnosAgendados();
                 cargarDiasBloqueados();
-                // Derivaciones no depende de la ciudad, pero podemos recargarla igual
                 cargarDerivaciones(); 
             }
 
             // 4. LÓGICA DE NAVEGACIÓN
             function mostrarVista(vistaActiva) {
-                Object.keys(vistas).forEach(key => vistas[key].classList.remove('activa'));
-                vistas[vistaActiva].classList.add('activa');
+                // Ocultar todas las vistas
+                Object.keys(vistas).forEach(key => {
+                    if(vistas[key]) vistas[key].classList.remove('activa');
+                });
+                // Mostrar la elegida
+                if(vistas[vistaActiva]) vistas[vistaActiva].classList.add('activa');
                 
+                // Desactivar todos los botones
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                document.getElementById(`tab-${vistaActiva}`).classList.add('active');
+                
+                // Activar el botón correspondiente
+                const btnActivo = document.getElementById(`tab-${vistaActiva}`);
+                if(btnActivo) btnActivo.classList.add('active');
             }
 
+            // Listeners de los tabs
             tabTurnos.addEventListener('click', () => mostrarVista('turnos'));
             tabDerivaciones.addEventListener('click', () => mostrarVista('derivaciones'));
             tabBloqueos.addEventListener('click', () => mostrarVista('bloqueos'));
             
+            // --- AQUÍ ESTÁ LA LÍNEA QUE PREGUNTABAS ---
+            if(tabAgregar) {
+                tabAgregar.addEventListener('click', () => mostrarVista('agregar'));
+            }
+
             logoutBtn.addEventListener('click', () => {
                 sessionStorage.removeItem('preventivista-logueado');
-                window.location.href = 'index.html'; // Corregido para volver al login correcto
+                window.location.href = 'index.html'; 
             });
 
-            // 5. FUNCIONES PARA CARGAR DATOS (AHORA CON CIUDAD)
+            // 5. FUNCIONES PARA CARGAR DATOS
             async function cargarTurnosAgendados() {
                 turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
                 const ciudad = citySelect.value;
                 try {
-                    // Enviamos la ciudad en la URL
                     const response = await fetch(`/api/admin/turnos?city=${ciudad}`);
                     const data = await response.json();
                     if (data.status === 'success' && data.appointments.length > 0) {
@@ -198,7 +245,6 @@
             }
 
             async function cargarDerivaciones() {
-                // Las derivaciones son globales, no filtramos por ciudad (por ahora)
                 derivacionesTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
                 try {
                     const response = await fetch('/api/admin/derivaciones');
@@ -220,8 +266,7 @@
 
             async function cargarDiasBloqueados() {
                 listaDiasBloqueados.innerHTML = '<li>Cargando...</li>';
-                const ciudad = citySelect.value; // Bloqueos también pueden ser por ciudad en el futuro
-                // Por ahora el bloqueo es global en el backend, pero enviamos la ciudad por consistencia
+                const ciudad = citySelect.value; 
                 const response = await fetch(`/api/admin/dias-bloqueados?city=${ciudad}`);
                 const result = await response.json();
                 if (result.status === 'success') {
@@ -237,7 +282,7 @@
                 }
             }
 
-            // 6. LÓGICA PARA ANULAR Y BLOQUEAR
+            // 6. LÓGICA DE ACCIONES (Anular, Bloquear, Generar)
             turnosTableBody.addEventListener('click', async (e) => {
                 if (e.target.classList.contains('cancel-btn')) {
                     const eventId = e.target.dataset.id;
@@ -245,7 +290,7 @@
                         const response = await fetch('/api/cancelar', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ eventId: eventId }) // Cancelar busca en todas las hojas, no necesita ciudad
+                            body: JSON.stringify({ eventId: eventId })
                         });
                         const result = await response.json();
                         if (result.status === 'success') {
@@ -258,10 +303,7 @@
 
             btnBloquear.addEventListener('click', async () => {
                 const dateToBlock = fechaInput.value;
-                if (!dateToBlock) {
-                    alert('Por favor, selecciona una fecha.');
-                    return;
-                }
+                if (!dateToBlock) { alert('Por favor, selecciona una fecha.'); return; }
                 const ciudad = citySelect.value;
                 if (confirm(`¿Estás seguro de que quieres bloquear el día ${dateToBlock} en la sede ${ciudad.toUpperCase()}?`)) {
                     btnBloquear.disabled = true;
@@ -278,6 +320,48 @@
                     cargarDiasBloqueados();
                 }
             });
+
+            // --- LÓGICA NUEVA: GENERAR TURNOS EXTRA ---
+            const btnGenerarExtra = document.getElementById('btn-generar-extra');
+            if(btnGenerarExtra) {
+                btnGenerarExtra.addEventListener('click', async () => {
+                    const date = document.getElementById('add-date').value;
+                    const start = document.getElementById('add-start').value;
+                    const end = document.getElementById('add-end').value;
+                    const duration = document.getElementById('add-duration').value;
+                    const city = citySelect.value;
+
+                    if (!date || !start || !end || !duration) {
+                        alert('Por favor completa todos los campos.');
+                        return;
+                    }
+
+                    if (confirm(`¿Vas a generar turnos para ${city.toUpperCase()} el día ${date} de ${start} a ${end}?\n\nEsto agregará turnos a la agenda existente.`)) {
+                        btnGenerarExtra.disabled = true;
+                        btnGenerarExtra.textContent = 'Generando...';
+
+                        try {
+                            const response = await fetch('/api/admin/agregar-turnos', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ city, date, start, end, duration })
+                            });
+                            const result = await response.json();
+                            
+                            if(result.status === 'success') {
+                                alert(result.message);
+                                document.getElementById('add-date').value = ''; // Limpiar fecha
+                            } else {
+                                alert('Error: ' + result.message);
+                            }
+                        } catch (e) {
+                            alert('Error de conexión.');
+                        }
+                        btnGenerarExtra.disabled = false;
+                        btnGenerarExtra.textContent = 'Generar Turnos';
+                    }
+                });
+            }
 
             // 7. CARGA INICIAL
             recargarDatos();
