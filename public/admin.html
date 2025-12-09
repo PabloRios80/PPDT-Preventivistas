@@ -21,6 +21,19 @@
         .btn-gray { background-color: #6c757d; }
         .btn-red { background-color: #dc3545; }
 
+        /* ESTILO PARA EL SELECTOR DE CIUDAD */
+        .city-selector {
+            padding: 10px;
+            border-radius: 5px;
+            border: 2px solid #005A9C;
+            color: #005A9C;
+            font-weight: bold;
+            font-size: 1em;
+            margin-right: 15px;
+            background-color: white;
+            cursor: pointer;
+        }
+
         .tabs { border-bottom: 2px solid #ccc; margin-bottom: 20px; }
         .tab-button { background-color: transparent; border: none; border-bottom: 3px solid transparent; padding: 10px 20px; cursor: pointer; font-size: 1.1em; font-weight: bold; color: #666; }
         .tab-button.active { color: #005A9C; border-bottom: 3px solid #005A9C; }
@@ -42,9 +55,15 @@
         <main>
             <div class="actions-bar">
                 <h2>Panel de Control</h2>
-                <div>
+                <div style="display: flex; align-items: center;">
+                    <label for="city-select" style="margin-right: 10px; font-weight: bold;">Sede:</label>
+                    <select id="city-select" class="city-selector">
+                        <option value="santafe">Santa Fe</option>
+                        <option value="rosario">Rosario</option>
+                    </select>
+
                     <a href="https://turnera-iapos-web.onrender.com/" target="_blank" class="action-button btn-green">Nuevo Turno</a>
-                    <button id="logout-btn" class="action-button btn-gray">Salir</button>
+                    <button id="logout-btn" class="action-button btn-gray" style="margin-left: 10px;">Salir</button>
                 </div>
             </div>
 
@@ -55,7 +74,7 @@
             </div>
 
             <div id="vista-turnos" class="vista activa">
-                <h3>Turnos Agendados</h3>
+                <h3>Turnos Agendados (<span class="ciudad-actual-label">Santa Fe</span>)</h3>
                 <table id="turnos-table">
                     <thead><tr><th>Fecha y Hora</th><th>Apellido y Nombre</th><th>DNI</th><th>Email</th><th>Teléfono</th><th>Acciones</th></tr></thead>
                     <tbody></tbody>
@@ -64,6 +83,7 @@
 
             <div id="vista-derivaciones" class="vista">
                 <h3>Derivaciones Recibidas</h3>
+                <p style="font-size: 0.8em; color: gray;">(Las derivaciones son globales para todas las sedes)</p>
                 <table id="derivaciones-table">
                     <thead><tr><th>Fecha Deriv.</th><th>DNI Paciente</th><th>Nombre y Apellido</th><th>Contacto</th><th>Observaciones</th><th>Médico Derivador</th></tr></thead>
                     <tbody></tbody>
@@ -71,7 +91,7 @@
             </div>
 
             <div id="vista-bloqueos" class="vista">
-                <h3>Gestión de Días No Laborables</h3>
+                <h3>Gestión de Días No Laborables (<span class="ciudad-actual-label">Santa Fe</span>)</h3>
                 <p>Usa esta herramienta para bloquear días por feriados imprevistos, paros, etc.</p>
                 <div>
                     <input type="date" id="fecha-a-bloquear" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
@@ -94,6 +114,9 @@
 
             // 2. REFERENCIAS A ELEMENTOS
             const logoutBtn = document.getElementById('logout-btn');
+            const citySelect = document.getElementById('city-select'); // Referencia al selector
+            const ciudadLabels = document.querySelectorAll('.ciudad-actual-label'); // Labels dinámicos
+            
             const tabTurnos = document.getElementById('tab-turnos');
             const tabDerivaciones = document.getElementById('tab-derivaciones');
             const tabBloqueos = document.getElementById('tab-bloqueos');
@@ -108,7 +131,32 @@
             const btnBloquear = document.getElementById('btn-bloquear');
             const listaDiasBloqueados = document.getElementById('lista-dias-bloqueados');
 
-            // 3. LÓGICA DE NAVEGACIÓN
+            // 3. CAMBIO DE CIUDAD
+            // Guardamos la preferencia en memoria para no perderla al recargar
+            const ciudadGuardada = localStorage.getItem('admin-ciudad-preferida') || 'santafe';
+            citySelect.value = ciudadGuardada;
+            actualizarLabelsCiudad(ciudadGuardada);
+
+            citySelect.addEventListener('change', (e) => {
+                const nuevaCiudad = e.target.value;
+                localStorage.setItem('admin-ciudad-preferida', nuevaCiudad);
+                actualizarLabelsCiudad(nuevaCiudad);
+                recargarDatos(); // Recargar todo al cambiar de ciudad
+            });
+
+            function actualizarLabelsCiudad(ciudad) {
+                const nombreCiudad = ciudad === 'rosario' ? 'Rosario' : 'Santa Fe';
+                ciudadLabels.forEach(span => span.textContent = nombreCiudad);
+            }
+
+            function recargarDatos() {
+                cargarTurnosAgendados();
+                cargarDiasBloqueados();
+                // Derivaciones no depende de la ciudad, pero podemos recargarla igual
+                cargarDerivaciones(); 
+            }
+
+            // 4. LÓGICA DE NAVEGACIÓN
             function mostrarVista(vistaActiva) {
                 Object.keys(vistas).forEach(key => vistas[key].classList.remove('activa'));
                 vistas[vistaActiva].classList.add('activa');
@@ -120,16 +168,19 @@
             tabTurnos.addEventListener('click', () => mostrarVista('turnos'));
             tabDerivaciones.addEventListener('click', () => mostrarVista('derivaciones'));
             tabBloqueos.addEventListener('click', () => mostrarVista('bloqueos'));
+            
             logoutBtn.addEventListener('click', () => {
                 sessionStorage.removeItem('preventivista-logueado');
-                window.location.href = 'index.html';
+                window.location.href = 'index.html'; // Corregido para volver al login correcto
             });
 
-            // 4. FUNCIONES PARA CARGAR DATOS
+            // 5. FUNCIONES PARA CARGAR DATOS (AHORA CON CIUDAD)
             async function cargarTurnosAgendados() {
                 turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
+                const ciudad = citySelect.value;
                 try {
-                    const response = await fetch('/api/admin/turnos');
+                    // Enviamos la ciudad en la URL
+                    const response = await fetch(`/api/admin/turnos?city=${ciudad}`);
                     const data = await response.json();
                     if (data.status === 'success' && data.appointments.length > 0) {
                         let html = '';
@@ -139,7 +190,7 @@
                         });
                         turnosTableBody.innerHTML = html;
                     } else {
-                        turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados.</td></tr>';
+                        turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados en esta sede.</td></tr>';
                     }
                 } catch (error) {
                     turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Error al cargar los turnos.</td></tr>';
@@ -147,6 +198,7 @@
             }
 
             async function cargarDerivaciones() {
+                // Las derivaciones son globales, no filtramos por ciudad (por ahora)
                 derivacionesTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
                 try {
                     const response = await fetch('/api/admin/derivaciones');
@@ -168,7 +220,9 @@
 
             async function cargarDiasBloqueados() {
                 listaDiasBloqueados.innerHTML = '<li>Cargando...</li>';
-                const response = await fetch('/api/admin/dias-bloqueados');
+                const ciudad = citySelect.value; // Bloqueos también pueden ser por ciudad en el futuro
+                // Por ahora el bloqueo es global en el backend, pero enviamos la ciudad por consistencia
+                const response = await fetch(`/api/admin/dias-bloqueados?city=${ciudad}`);
                 const result = await response.json();
                 if (result.status === 'success') {
                     listaDiasBloqueados.innerHTML = '';
@@ -183,7 +237,7 @@
                 }
             }
 
-            // 5. LÓGICA PARA ANULAR Y BLOQUEAR
+            // 6. LÓGICA PARA ANULAR Y BLOQUEAR
             turnosTableBody.addEventListener('click', async (e) => {
                 if (e.target.classList.contains('cancel-btn')) {
                     const eventId = e.target.dataset.id;
@@ -191,7 +245,7 @@
                         const response = await fetch('/api/cancelar', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ eventId: eventId })
+                            body: JSON.stringify({ eventId: eventId }) // Cancelar busca en todas las hojas, no necesita ciudad
                         });
                         const result = await response.json();
                         if (result.status === 'success') {
@@ -208,28 +262,27 @@
                     alert('Por favor, selecciona una fecha.');
                     return;
                 }
-                if (confirm(`¿Estás seguro de que quieres bloquear el día ${dateToBlock}? Se eliminarán todos los turnos disponibles para esa fecha.`)) {
+                const ciudad = citySelect.value;
+                if (confirm(`¿Estás seguro de que quieres bloquear el día ${dateToBlock} en la sede ${ciudad.toUpperCase()}?`)) {
                     btnBloquear.disabled = true;
                     btnBloquear.textContent = 'Bloqueando...';
                     const response = await fetch('/api/admin/bloquear-dia', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ date: dateToBlock })
+                        body: JSON.stringify({ date: dateToBlock, city: ciudad })
                     });
                     const result = await response.json();
                     alert(result.message);
                     btnBloquear.disabled = false;
                     btnBloquear.textContent = 'Bloquear Día';
-                    cargarDiasBloqueados(); // Actualizar la lista
+                    cargarDiasBloqueados();
                 }
             });
 
-            // 6. CARGA INICIAL DE DATOS
-            cargarTurnosAgendados();
-            cargarDerivaciones();
-            cargarDiasBloqueados();
+            // 7. CARGA INICIAL
+            recargarDatos();
             
-        }); // <-- ESTA ES LA LLAVE '}' QUE FALTABA
+        });
     </script>
 </body>
 </html>
