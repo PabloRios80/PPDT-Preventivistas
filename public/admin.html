@@ -221,8 +221,7 @@
                 sessionStorage.removeItem('preventivista-logueado');
                 window.location.href = 'index.html'; 
             });
-
-            // 5. FUNCIONES PARA CARGAR DATOS
+// 5. FUNCIONES PARA CARGAR DATOS
             async function cargarTurnosAgendados() {
                 turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
                 const ciudad = citySelect.value;
@@ -233,9 +232,46 @@
                         let html = '';
                         data.appointments.forEach(turno => {
                             const fecha = new Date(turno.fechaInicio).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-                            html += `<tr id="turno-${turno.idEvento.replace(/@/g, '-')}"><td>${fecha} hs</td><td>${turno.apellido}, ${turno.nombre}</td><td>${turno.dni}</td><td>${turno.email || ''}</td><td>${turno.telefono}</td><td><button class="cancel-btn" data-id="${turno.idEvento}">Anular</button></td></tr>`;
+                            
+                            // CAMBIO 1: Agregamos data-date="${turno.fechaInicio}" a la fila (tr)
+                            html += `<tr id="turno-${turno.idEvento.replace(/@/g, '-')}" data-date="${turno.fechaInicio}"><td>${fecha} hs</td><td>${turno.apellido}, ${turno.nombre}</td><td>${turno.dni}</td><td>${turno.email || ''}</td><td>${turno.telefono}</td><td><button class="cancel-btn" data-id="${turno.idEvento}">Anular</button></td></tr>`;
                         });
                         turnosTableBody.innerHTML = html;
+
+                        // CAMBIO 2: Magia del scroll automático
+                        setTimeout(() => {
+                            const hoy = new Date();
+                            hoy.setHours(0, 0, 0, 0); // Seteamos a la medianoche para comparar solo fechas, no horas
+
+                            const filas = turnosTableBody.querySelectorAll('tr[data-date]');
+                            let filaDestino = null;
+
+                            // Buscamos la primera fila que sea de hoy o del futuro
+                            for (let fila of filas) {
+                                const fechaTurno = new Date(fila.getAttribute('data-date'));
+                                if (fechaTurno >= hoy) {
+                                    filaDestino = fila;
+                                    break; 
+                                }
+                            }
+
+                            // Si encontramos el turno de "hoy", bajamos la pantalla
+                            if (filaDestino) {
+                                // Scroll suave hasta el centro de la pantalla
+                                filaDestino.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                
+                                // Pintamos la fila de verde clarito para que resalte
+                                const colorOriginal = filaDestino.style.backgroundColor || '';
+                                filaDestino.style.backgroundColor = '#e6ffed'; 
+                                
+                                // A los 3 segundos, le devolvemos su color original suavemente
+                                setTimeout(() => {
+                                    filaDestino.style.backgroundColor = colorOriginal; 
+                                    filaDestino.style.transition = 'background-color 1.5s ease';
+                                }, 3000);
+                            }
+                        }, 300); // 300ms de margen para que la tabla termine de dibujarse
+
                     } else {
                         turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados en esta sede.</td></tr>';
                     }
@@ -243,7 +279,6 @@
                     turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Error al cargar los turnos.</td></tr>';
                 }
             }
-
             async function cargarDerivaciones() {
                 derivacionesTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
                 try {
@@ -264,23 +299,80 @@
                 }
             }
 
+
+            // 1. Reemplaza tu función cargarDiasBloqueados actual por esta:
             async function cargarDiasBloqueados() {
                 listaDiasBloqueados.innerHTML = '<li>Cargando...</li>';
                 const ciudad = citySelect.value; 
+                // Nota: Los bloqueos son globales en el backend actual, pero enviamos la ciudad por si acaso
                 const response = await fetch(`/api/admin/dias-bloqueados?city=${ciudad}`);
                 const result = await response.json();
+                
                 if (result.status === 'success') {
                     listaDiasBloqueados.innerHTML = '';
                     if (result.blocked_dates.length > 0) {
                         result.blocked_dates.forEach(date => {
-                            const fechaFormateada = new Date(date + 'T00:00:00').toLocaleDateString('es-AR', { dateStyle: 'full' });
-                            listaDiasBloqueados.innerHTML += `<li>${fechaFormateada}</li>`;
+                            // Convertimos la fecha para mostrarla y para usarla como ID
+                            // date viene como "YYYY-MM-DD"
+                            const [year, month, day] = date.split('-'); 
+                            const fechaObjeto = new Date(year, month - 1, day);
+                            const fechaFormateada = fechaObjeto.toLocaleDateString('es-AR', { dateStyle: 'full' });
+                            
+                            // Agregamos el botón de eliminar (ícono de basura o texto 'X')
+                            // Usamos data-date para guardar la fecha original "YYYY-MM-DD"
+                            listaDiasBloqueados.innerHTML += `
+                                <li style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>${fechaFormateada}</span>
+                                    <button class="btn-desbloquear" data-date="${date}" style="background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.8em; margin-left: 10px;">
+                                        Desbloquear
+                                    </button>
+                                </li>`;
                         });
                     } else {
                         listaDiasBloqueados.innerHTML = '<li>No hay días bloqueados manualmente.</li>';
                     }
                 }
             }
+
+            // 2. Agrega este Nuevo Listener para manejar los clicks en "Desbloquear"
+            // (Pégalo justo después de la función cargarDiasBloqueados o junto a los otros listeners)
+            listaDiasBloqueados.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('btn-desbloquear')) {
+                    const dateToUnblock = e.target.dataset.date; // Recuperamos YYYY-MM-DD
+                    const ciudad = citySelect.value; // <--- OBTENEMOS LA CIUDAD ACTUAL
+                    
+                    if (confirm(`¿Quieres desbloquear el día ${dateToUnblock}? \n\nEl sistema intentará regenerar los turnos para ese día automáticamente.`)) {
+                        // Cambiamos el texto del botón para dar feedback visual
+                        const originalText = e.target.textContent;
+                        e.target.disabled = true;
+                        e.target.textContent = 'Procesando...';
+
+                        try {
+                            const response = await fetch('/api/admin/desbloquear-dia', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ date: dateToUnblock }),
+                                city: ciudad // <--- ENVIAMOS LA CIUDAD
+                            });
+                            const result = await response.json();
+
+                            if (result.status === 'success') {
+                                alert('Día desbloqueado correctamente.\nLos turnos han sido regenerados.');
+                                cargarDiasBloqueados(); // Recargamos la lista
+                                cargarTurnosAgendados(); // Recargamos la tabla de turnos por si aparecieron nuevos
+                            } else {
+                                alert('Error: ' + result.message);
+                                e.target.disabled = false;
+                                e.target.textContent = originalText;
+                            }
+                        } catch (error) {
+                            alert('Error de conexión.');
+                            e.target.disabled = false;
+                            e.target.textContent = originalText;
+                        }
+                    }
+                }
+            });
 
             // 6. LÓGICA DE ACCIONES (Anular, Bloquear, Generar)
             turnosTableBody.addEventListener('click', async (e) => {

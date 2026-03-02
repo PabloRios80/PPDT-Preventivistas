@@ -72,34 +72,35 @@ app.get('/api/admin/derivaciones', async (req, res) => {
     }
 });
 
-// Obtener días bloqueados
+// Endpoint para obtener la lista de días bloqueados (POR CIUDAD)
 app.get('/api/admin/dias-bloqueados', async (req, res) => {
     try {
         const city = req.query.city || 'santafe';
         const response = await axios.post(APPS_SCRIPT_URL, { 
             action: 'getBlockedDays',
-            city: city
+            city: city // Enviamos la ciudad elegida
         });
         res.json(response.data);
     } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Error al cargar días bloqueados.' });
+        res.status(500).json({ status: 'error', message: 'No se pudieron cargar los días bloqueados.' });
     }
 });
 
-// Bloquear un día
-app.post('/api/admin/bloquear-dia', async (req, res) => {
+// Endpoint para DESBLOQUEAR un día (CON CIUDAD)
+app.post('/api/admin/desbloquear-dia', async (req, res) => {
     try {
-        const { date, city } = req.body;
-        console.log(`[Admin] Bloqueando día ${date} para ${city || 'Global'}`);
+        const { date, city } = req.body; // Recibimos la ciudad
+        console.log(`[Admin] Desbloqueando día ${date} para ${city}`);
         
         const response = await axios.post(APPS_SCRIPT_URL, {
-            action: 'blockDay',
+            action: 'unblockDay',
             date: date,
-            city: city // Enviamos la ciudad para futuro uso (aunque hoy bloquee global)
+            city: city // Enviamos la ciudad
         });
         res.json(response.data);
     } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Error al bloquear el día.' });
+        console.error('Error unblocking day:', error);
+        res.status(500).json({ status: 'error', message: 'No se pudo desbloquear el día.' });
     }
 });
 
@@ -139,6 +140,45 @@ app.post('/api/admin/agregar-turnos', async (req, res) => {
     }
 });
 
+// Endpoint para DESBLOQUEAR un día
+app.post('/api/admin/desbloquear-dia', async (req, res) => {
+    try {
+        const { date, city } = req.body;
+        console.log(`[Admin] Desbloqueando día ${date} para ${city}`);
+        
+        const response = await axios.post(APPS_SCRIPT_URL, {
+            action: 'unblockDay',
+            date: date,
+            city: city
+        });
+        res.json(response.data);
+    } catch (error) {
+        console.error('Error unblocking day:', error);
+        res.status(500).json({ status: 'error', message: 'No se pudo desbloquear el día.' });
+    }
+});
+// =========================================================
+// Endpoint para BLOQUEAR un día (FALTABA ESTO)
+// =========================================================
+app.post('/api/admin/bloquear-dia', async (req, res) => {
+    try {
+        // Recibimos la fecha y la ciudad del frontend
+        const { date, city } = req.body;
+        
+        console.log(`[Admin] Solicitud de bloqueo: Día ${date} para ${city || 'Global'}`);
+        
+        const response = await axios.post(APPS_SCRIPT_URL, {
+            action: 'blockDay', // Llamamos a la función en Apps Script
+            date: date,
+            city: city 
+        });
+        
+        res.json(response.data);
+    } catch (error) {
+        console.error('Error blocking day:', error);
+        res.status(500).json({ status: 'error', message: 'No se pudo bloquear el día.' });
+    }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
