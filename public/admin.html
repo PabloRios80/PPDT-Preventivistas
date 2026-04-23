@@ -253,7 +253,7 @@
                                     <td>${turno.dni}</td>
                                     <td>${turno.email || ''}</td>
                                     <td>${turno.telefono}</td>
-                                    <td><button class="cancel-btn" data-id="${turno.idEvento}">Anular</button></td>
+                                    <td><button class="cancel-btn" data-id="${turno.idEvento || turno.idTurno}">Anular</button></td>
                                 </tr>`;
                             }
                         });
