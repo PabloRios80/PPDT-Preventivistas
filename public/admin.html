@@ -21,7 +21,6 @@
         .btn-gray { background-color: #6c757d; }
         .btn-red { background-color: #dc3545; }
 
-        /* ESTILO PARA EL SELECTOR DE CIUDAD */
         .city-selector {
             padding: 10px;
             border-radius: 5px;
@@ -40,6 +39,7 @@
         .vista { display: none; }
         .vista.activa { display: block; }
         .cancel-btn { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+        .move-btn { background-color: #009A44; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         #lista-dias-bloqueados { list-style-type: none; padding: 0; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
         #lista-dias-bloqueados li { background-color: #f8d7da; color: #721c24; padding: 8px; margin-bottom: 5px; border-radius: 4px; }
     </style>
@@ -60,6 +60,7 @@
                     <select id="city-select" class="city-selector">
                         <option value="santafe">Santa Fe</option>
                         <option value="rosario">Rosario</option>
+                        <option value="fuerzas">Fuerzas de Seguridad</option>
                     </select>
 
                     <a href="https://turnera-iapos-web.onrender.com/" target="_blank" class="action-button btn-green">Nuevo Turno</a>
@@ -101,36 +102,35 @@
                 <h4>Días actualmente bloqueados:</h4>
                 <ul id="lista-dias-bloqueados"></ul>
             </div>
-                    <div id="vista-agregar" class="vista">
-    <h3>Agregar Disponibilidad Extra (<span class="ciudad-actual-label">Santa Fe</span>)</h3>
-    <p>Utiliza esta función para agregar días excepcionales (ej: Sábados) o extender horarios en días existentes.</p>
+            <div id="vista-agregar" class="vista">
+                <h3>Agregar Disponibilidad Extra (<span class="ciudad-actual-label">Santa Fe</span>)</h3>
+                <p>Utiliza esta función para agregar días excepcionales (ej: Sábados) o extender horarios en días existentes.</p>
 
-    <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; max-width: 500px;">
-        <label style="display:block; margin-bottom:10px;">
-            <strong>Fecha:</strong>
-            <input type="date" id="add-date" style="width:100%; padding:8px; margin-top:5px;">
-        </label>
+                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; max-width: 500px;">
+                    <label style="display:block; margin-bottom:10px;">
+                        <strong>Fecha:</strong>
+                        <input type="date" id="add-date" style="width:100%; padding:8px; margin-top:5px;">
+                    </label>
 
-        <div style="display:flex; gap:15px; margin-bottom:10px;">
-            <label style="flex:1;">
-                <strong>Hora Inicio:</strong>
-                <input type="time" id="add-start" value="08:00" style="width:100%; padding:8px; margin-top:5px;">
-            </label>
-            <label style="flex:1;">
-                <strong>Hora Fin:</strong>
-                <input type="time" id="add-end" value="12:00" style="width:100%; padding:8px; margin-top:5px;">
-            </label>
-        </div>
+                    <div style="display:flex; gap:15px; margin-bottom:10px;">
+                        <label style="flex:1;">
+                            <strong>Hora Inicio:</strong>
+                            <input type="time" id="add-start" value="08:00" style="width:100%; padding:8px; margin-top:5px;">
+                        </label>
+                        <label style="flex:1;">
+                            <strong>Hora Fin:</strong>
+                            <input type="time" id="add-end" value="12:00" style="width:100%; padding:8px; margin-top:5px;">
+                        </label>
+                    </div>
 
-        <label style="display:block; margin-bottom:20px;">
-            <strong>Duración del turno (minutos):</strong>
-            <input type="number" id="add-duration" value="10" style="width:100%; padding:8px; margin-top:5px;">
-        </label>
+                    <label style="display:block; margin-bottom:20px;">
+                        <strong>Duración del turno (minutos):</strong>
+                        <input type="number" id="add-duration" value="10" style="width:100%; padding:8px; margin-top:5px;">
+                    </label>
 
-        <button id="btn-generar-extra" class="action-button btn-green" style="width:100%;">Generar Turnos</button>
-    </div>
-</div>
-
+                    <button id="btn-generar-extra" class="action-button btn-green" style="width:100%;">Generar Turnos</button>
+                </div>
+            </div>
 
         </main>
     </div>
@@ -151,14 +151,14 @@
             const tabTurnos = document.getElementById('tab-turnos');
             const tabDerivaciones = document.getElementById('tab-derivaciones');
             const tabBloqueos = document.getElementById('tab-bloqueos');
-            const tabAgregar = document.getElementById('tab-agregar'); // <--- NUEVO
+            const tabAgregar = document.getElementById('tab-agregar');
 
-            // Vistas (Aquí agregamos la nueva vista 'agregar')
+            // Vistas
             const vistas = {
                 turnos: document.getElementById('vista-turnos'),
                 derivaciones: document.getElementById('vista-derivaciones'),
                 bloqueos: document.getElementById('vista-bloqueos'),
-                agregar: document.getElementById('vista-agregar') // <--- NUEVO
+                agregar: document.getElementById('vista-agregar')
             };
 
             const turnosTableBody = document.querySelector('#turnos-table tbody');
@@ -180,7 +180,9 @@
             });
 
             function actualizarLabelsCiudad(ciudad) {
-                const nombreCiudad = ciudad === 'rosario' ? 'Rosario' : 'Santa Fe';
+                let nombreCiudad = 'Santa Fe';
+                if(ciudad === 'rosario') nombreCiudad = 'Rosario';
+                if(ciudad === 'fuerzas') nombreCiudad = 'Fuerzas de Seguridad';
                 ciudadLabels.forEach(span => span.textContent = nombreCiudad);
             }
 
@@ -192,27 +194,19 @@
 
             // 4. LÓGICA DE NAVEGACIÓN
             function mostrarVista(vistaActiva) {
-                // Ocultar todas las vistas
                 Object.keys(vistas).forEach(key => {
                     if(vistas[key]) vistas[key].classList.remove('activa');
                 });
-                // Mostrar la elegida
                 if(vistas[vistaActiva]) vistas[vistaActiva].classList.add('activa');
                 
-                // Desactivar todos los botones
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                
-                // Activar el botón correspondiente
                 const btnActivo = document.getElementById(`tab-${vistaActiva}`);
                 if(btnActivo) btnActivo.classList.add('active');
             }
 
-            // Listeners de los tabs
             tabTurnos.addEventListener('click', () => mostrarVista('turnos'));
             tabDerivaciones.addEventListener('click', () => mostrarVista('derivaciones'));
             tabBloqueos.addEventListener('click', () => mostrarVista('bloqueos'));
-            
-            // --- AQUÍ ESTÁ LA LÍNEA QUE PREGUNTABAS ---
             if(tabAgregar) {
                 tabAgregar.addEventListener('click', () => mostrarVista('agregar'));
             }
@@ -221,7 +215,8 @@
                 sessionStorage.removeItem('preventivista-logueado');
                 window.location.href = 'index.html'; 
             });
-// 5. FUNCIONES PARA CARGAR DATOS
+
+            // 5. FUNCIONES PARA CARGAR DATOS
             async function cargarTurnosAgendados() {
                 turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
                 const ciudad = citySelect.value;
@@ -233,20 +228,45 @@
                         data.appointments.forEach(turno => {
                             const fecha = new Date(turno.fechaInicio).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
                             
-                            // CAMBIO 1: Agregamos data-date="${turno.fechaInicio}" a la fila (tr)
-                            html += `<tr id="turno-${turno.idEvento.replace(/@/g, '-')}" data-date="${turno.fechaInicio}"><td>${fecha} hs</td><td>${turno.apellido}, ${turno.nombre}</td><td>${turno.dni}</td><td>${turno.email || ''}</td><td>${turno.telefono}</td><td><button class="cancel-btn" data-id="${turno.idEvento}">Anular</button></td></tr>`;
+                            // AQUI ESTA LA MAGIA: Diferenciamos entre Disponible y Confirmado
+                            if (turno.estado === 'Disponible') {
+                                if (ciudad !== 'fuerzas') {
+                                    // Turno libre en Santa Fe o Rosario -> Mostramos botón verde
+                                    html += `<tr data-date="${turno.fechaInicio}" style="background-color: #f8f9fa;">
+                                        <td>${fecha} hs</td>
+                                        <td colspan="4" style="color: #6c757d; font-style: italic;">Turno Libre (Público)</td>
+                                        <td><button class="action-button btn-green move-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Reservar p/ Fuerzas</button></td>
+                                    </tr>`;
+                                } else {
+                                    // Turno libre en Fuerzas de Seguridad
+                                    html += `<tr data-date="${turno.fechaInicio}" style="background-color: #e6f2ff;">
+                                        <td>${fecha} hs</td>
+                                        <td colspan="4" style="color: #005A9C; font-weight: bold;">Turno Reservado para Fuerzas (Libre)</td>
+                                        <td>-</td>
+                                    </tr>`;
+                                }
+                            } else {
+                                // Turno ocupado normal -> Mostramos botón rojo
+                                html += `<tr id="turno-${turno.idEvento ? turno.idEvento.replace(/@/g, '-') : turno.idTurno}" data-date="${turno.fechaInicio}">
+                                    <td>${fecha} hs</td>
+                                    <td>${turno.apellido}, ${turno.nombre}</td>
+                                    <td>${turno.dni}</td>
+                                    <td>${turno.email || ''}</td>
+                                    <td>${turno.telefono}</td>
+                                    <td><button class="cancel-btn" data-id="${turno.idEvento}">Anular</button></td>
+                                </tr>`;
+                            }
                         });
                         turnosTableBody.innerHTML = html;
 
-                        // CAMBIO 2: Magia del scroll automático
+                        // Scroll Automático a "Hoy"
                         setTimeout(() => {
                             const hoy = new Date();
-                            hoy.setHours(0, 0, 0, 0); // Seteamos a la medianoche para comparar solo fechas, no horas
+                            hoy.setHours(0, 0, 0, 0); 
 
                             const filas = turnosTableBody.querySelectorAll('tr[data-date]');
                             let filaDestino = null;
 
-                            // Buscamos la primera fila que sea de hoy o del futuro
                             for (let fila of filas) {
                                 const fechaTurno = new Date(fila.getAttribute('data-date'));
                                 if (fechaTurno >= hoy) {
@@ -255,22 +275,16 @@
                                 }
                             }
 
-                            // Si encontramos el turno de "hoy", bajamos la pantalla
                             if (filaDestino) {
-                                // Scroll suave hasta el centro de la pantalla
                                 filaDestino.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                
-                                // Pintamos la fila de verde clarito para que resalte
                                 const colorOriginal = filaDestino.style.backgroundColor || '';
                                 filaDestino.style.backgroundColor = '#e6ffed'; 
-                                
-                                // A los 3 segundos, le devolvemos su color original suavemente
                                 setTimeout(() => {
                                     filaDestino.style.backgroundColor = colorOriginal; 
                                     filaDestino.style.transition = 'background-color 1.5s ease';
                                 }, 3000);
                             }
-                        }, 300); // 300ms de margen para que la tabla termine de dibujarse
+                        }, 300);
 
                     } else {
                         turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados en esta sede.</td></tr>';
@@ -279,6 +293,7 @@
                     turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Error al cargar los turnos.</td></tr>';
                 }
             }
+
             async function cargarDerivaciones() {
                 derivacionesTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
                 try {
@@ -299,12 +314,9 @@
                 }
             }
 
-
-            // 1. Reemplaza tu función cargarDiasBloqueados actual por esta:
             async function cargarDiasBloqueados() {
                 listaDiasBloqueados.innerHTML = '<li>Cargando...</li>';
                 const ciudad = citySelect.value; 
-                // Nota: Los bloqueos son globales en el backend actual, pero enviamos la ciudad por si acaso
                 const response = await fetch(`/api/admin/dias-bloqueados?city=${ciudad}`);
                 const result = await response.json();
                 
@@ -312,14 +324,9 @@
                     listaDiasBloqueados.innerHTML = '';
                     if (result.blocked_dates.length > 0) {
                         result.blocked_dates.forEach(date => {
-                            // Convertimos la fecha para mostrarla y para usarla como ID
-                            // date viene como "YYYY-MM-DD"
                             const [year, month, day] = date.split('-'); 
                             const fechaObjeto = new Date(year, month - 1, day);
                             const fechaFormateada = fechaObjeto.toLocaleDateString('es-AR', { dateStyle: 'full' });
-                            
-                            // Agregamos el botón de eliminar (ícono de basura o texto 'X')
-                            // Usamos data-date para guardar la fecha original "YYYY-MM-DD"
                             listaDiasBloqueados.innerHTML += `
                                 <li style="display: flex; justify-content: space-between; align-items: center;">
                                     <span>${fechaFormateada}</span>
@@ -334,15 +341,12 @@
                 }
             }
 
-            // 2. Agrega este Nuevo Listener para manejar los clicks en "Desbloquear"
-            // (Pégalo justo después de la función cargarDiasBloqueados o junto a los otros listeners)
             listaDiasBloqueados.addEventListener('click', async (e) => {
                 if (e.target.classList.contains('btn-desbloquear')) {
-                    const dateToUnblock = e.target.dataset.date; // Recuperamos YYYY-MM-DD
-                    const ciudad = citySelect.value; // <--- OBTENEMOS LA CIUDAD ACTUAL
+                    const dateToUnblock = e.target.dataset.date; 
+                    const ciudad = citySelect.value; 
                     
                     if (confirm(`¿Quieres desbloquear el día ${dateToUnblock}? \n\nEl sistema intentará regenerar los turnos para ese día automáticamente.`)) {
-                        // Cambiamos el texto del botón para dar feedback visual
                         const originalText = e.target.textContent;
                         e.target.disabled = true;
                         e.target.textContent = 'Procesando...';
@@ -351,15 +355,14 @@
                             const response = await fetch('/api/admin/desbloquear-dia', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ date: dateToUnblock }),
-                                city: ciudad // <--- ENVIAMOS LA CIUDAD
+                                body: JSON.stringify({ date: dateToUnblock, city: ciudad }) 
                             });
                             const result = await response.json();
 
                             if (result.status === 'success') {
                                 alert('Día desbloqueado correctamente.\nLos turnos han sido regenerados.');
-                                cargarDiasBloqueados(); // Recargamos la lista
-                                cargarTurnosAgendados(); // Recargamos la tabla de turnos por si aparecieron nuevos
+                                cargarDiasBloqueados(); 
+                                cargarTurnosAgendados(); 
                             } else {
                                 alert('Error: ' + result.message);
                                 e.target.disabled = false;
@@ -374,8 +377,10 @@
                 }
             });
 
-            // 6. LÓGICA DE ACCIONES (Anular, Bloquear, Generar)
+            // 6. LÓGICA DE ACCIONES (Anular, MOVER, Bloquear, Generar)
             turnosTableBody.addEventListener('click', async (e) => {
+                
+                // Acción ANULAR
                 if (e.target.classList.contains('cancel-btn')) {
                     const eventId = e.target.dataset.id;
                     if (confirm('¿Estás seguro de que quieres anular este turno?')) {
@@ -386,9 +391,40 @@
                         });
                         const result = await response.json();
                         if (result.status === 'success') {
-                            document.getElementById(`turno-${eventId.replace(/@/g, '-')}`).remove();
                             alert('Turno anulado con éxito.');
+                            cargarTurnosAgendados(); // Recargamos la tabla
                         } else { alert('Error al anular el turno: ' + result.message); }
+                    }
+                }
+
+                // NUEVA Acción MOVER A FUERZAS
+                if (e.target.classList.contains('move-btn')) {
+                    const idTurno = e.target.dataset.id;
+                    const ciudad = citySelect.value;
+                    
+                    if (confirm('¿Mover este turno a la agenda de Fuerzas de Seguridad?\n\nDesaparecerá de la agenda pública inmediatamente.')) {
+                        e.target.disabled = true;
+                        e.target.textContent = 'Moviendo...';
+                        try {
+                            const response = await fetch('/api/admin/mover-fuerzas', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ idTurno: idTurno, city: ciudad })
+                            });
+                            const result = await response.json();
+                            if (result.status === 'success') {
+                                alert('Turno movido con éxito.');
+                                cargarTurnosAgendados(); 
+                            } else {
+                                alert('Error: ' + result.message);
+                                e.target.disabled = false;
+                                e.target.textContent = 'Reservar p/ Fuerzas';
+                            }
+                        } catch (err) {
+                            alert('Error de conexión.');
+                            e.target.disabled = false;
+                            e.target.textContent = 'Reservar p/ Fuerzas';
+                        }
                     }
                 }
             });
@@ -410,10 +446,10 @@
                     btnBloquear.disabled = false;
                     btnBloquear.textContent = 'Bloquear Día';
                     cargarDiasBloqueados();
+                    cargarTurnosAgendados();
                 }
             });
 
-            // --- LÓGICA NUEVA: GENERAR TURNOS EXTRA ---
             const btnGenerarExtra = document.getElementById('btn-generar-extra');
             if(btnGenerarExtra) {
                 btnGenerarExtra.addEventListener('click', async () => {
@@ -442,7 +478,8 @@
                             
                             if(result.status === 'success') {
                                 alert(result.message);
-                                document.getElementById('add-date').value = ''; // Limpiar fecha
+                                document.getElementById('add-date').value = ''; 
+                                cargarTurnosAgendados();
                             } else {
                                 alert('Error: ' + result.message);
                             }
@@ -457,7 +494,6 @@
 
             // 7. CARGA INICIAL
             recargarDatos();
-            
         });
     </script>
 </body>
