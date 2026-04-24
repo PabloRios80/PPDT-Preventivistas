@@ -227,22 +227,20 @@
                         let html = '';
                         data.appointments.forEach(turno => {
                             const fecha = new Date(turno.fechaInicio).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-                            
-                            // AQUI ESTA LA MAGIA: Diferenciamos entre Disponible y Confirmado
                             if (turno.estado === 'Disponible') {
-                                if (ciudad !== 'fuerzas') {
-                                    // Turno libre en Santa Fe o Rosario -> Mostramos botón verde
+                                if (!turno.esFuerza) { // <--- CAMBIO CLAVE AQUÍ: Miramos si el turno es de fuerzas o no
+                                    // Turnos libres en la agenda pública (Santa Fe / Rosario)
                                     html += `<tr data-date="${turno.fechaInicio}" style="background-color: #f8f9fa;">
                                         <td>${fecha} hs</td>
                                         <td colspan="4" style="color: #6c757d; font-style: italic;">Turno Libre (Público)</td>
                                         <td><button class="action-button btn-green move-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Reservar p/ Fuerzas</button></td>
                                     </tr>`;
                                 } else {
-                                    // Turno libre en Fuerzas de Seguridad
+                                    // Turnos libres en la agenda de Fuerzas (Con botón para devolverlos)
                                     html += `<tr data-date="${turno.fechaInicio}" style="background-color: #e6f2ff;">
                                         <td>${fecha} hs</td>
                                         <td colspan="4" style="color: #005A9C; font-weight: bold;">Turno Reservado para Fuerzas (Libre)</td>
-                                        <td>-</td>
+                                        <td><button class="action-button btn-gray return-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Devolver a Público</button></td>
                                     </tr>`;
                                 }
                             } else {
@@ -376,8 +374,7 @@
                     }
                 }
             });
-
-            // 6. LÓGICA DE ACCIONES (Anular, MOVER, Bloquear, Generar)
+// 6. LÓGICA DE ACCIONES (Anular, MOVER, DEVOLVER)
             turnosTableBody.addEventListener('click', async (e) => {
                 
                 // Acción ANULAR
@@ -392,12 +389,12 @@
                         const result = await response.json();
                         if (result.status === 'success') {
                             alert('Turno anulado con éxito.');
-                            cargarTurnosAgendados(); // Recargamos la tabla
+                            cargarTurnosAgendados(); 
                         } else { alert('Error al anular el turno: ' + result.message); }
                     }
                 }
 
-                // NUEVA Acción MOVER A FUERZAS
+                // Acción MOVER A FUERZAS
                 if (e.target.classList.contains('move-btn')) {
                     const idTurno = e.target.dataset.id;
                     const ciudad = citySelect.value;
@@ -424,6 +421,36 @@
                             alert('Error de conexión.');
                             e.target.disabled = false;
                             e.target.textContent = 'Reservar p/ Fuerzas';
+                        }
+                    }
+                }
+
+                // Acción DEVOLVER A PÚBLICO
+                if (e.target.classList.contains('return-btn')) {
+                    const idTurno = e.target.dataset.id;
+                    
+                    if (confirm('¿Devolver este turno a la agenda pública?\n\nCualquier afiliado podrá volver a reservarlo.')) {
+                        e.target.disabled = true;
+                        e.target.textContent = 'Devolviendo...';
+                        try {
+                            const response = await fetch('/api/admin/devolver-publico', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ idTurno: idTurno })
+                            });
+                            const result = await response.json();
+                            if (result.status === 'success') {
+                                alert('Turno devuelto con éxito.');
+                                cargarTurnosAgendados(); 
+                            } else {
+                                alert('Error: ' + result.message);
+                                e.target.disabled = false;
+                                e.target.textContent = 'Devolver a Público';
+                            }
+                        } catch (err) {
+                            alert('Error de conexión.');
+                            e.target.disabled = false;
+                            e.target.textContent = 'Devolver a Público';
                         }
                     }
                 }
