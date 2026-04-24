@@ -181,6 +181,20 @@ app.post('/api/admin/mover-fuerzas', async (req, res) => {
         res.status(500).json({ status: 'error', message: 'Error al mover el turno.' });
     }
 });
+// Endpoint para devolver un turno de Fuerzas a Público
+app.post('/api/admin/devolver-publico', async (req, res) => {
+    try {
+        const response = await axios.post(APPS_SCRIPT_URL, {
+            action: 'returnToPublic',
+            idTurno: req.body.idTurno
+        });
+        res.json(response.data);
+    } catch (error) {
+        console.error('Error devolviendo turno:', error);
+        res.status(500).json({ status: 'error', message: 'Error al devolver el turno.' });
+    }
+});
+
 app.post('/api/admin/devolver-publico', async (req, res) => {
     try {
         const response = await axios.post(APPS_SCRIPT_URL, {
