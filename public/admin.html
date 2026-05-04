@@ -244,14 +244,29 @@
                                     </tr>`;
                                 }
                             } else {
-                                // Turno ocupado normal -> Mostramos botón rojo
-                                html += `<tr id="turno-${turno.idEvento ? turno.idEvento.replace(/@/g, '-') : turno.idTurno}" data-date="${turno.fechaInicio}">
+                                // Turnos Ocupados
+                                
+                                // 1. Creamos la etiqueta FDS y el color de fondo si es de Fuerzas
+                                const etiquetaFDS = turno.esFuerza 
+                                    ? '<span style="background-color: #005A9C; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 10px;">FDS</span>' 
+                                    : '';
+                                
+                                // Si es de fuerzas, pintamos la fila de un celeste muy suave, si no, sin fondo
+                                const fondoFila = turno.esFuerza ? 'background-color: #e6f2ff;' : '';
+
+                                // 2. Dibujamos la fila inyectando el color de fondo y la etiqueta FDS
+                                html += `<tr id="turno-${turno.idEvento ? turno.idEvento.replace(/@/g, '-') : ''}" data-date="${turno.fechaInicio}" style="${fondoFila}">
                                     <td>${fecha} hs</td>
                                     <td>${turno.apellido}, ${turno.nombre}</td>
                                     <td>${turno.dni}</td>
                                     <td>${turno.email || ''}</td>
                                     <td>${turno.telefono}</td>
-                                    <td><button class="cancel-btn" data-id="${turno.idEvento || turno.idTurno}">Anular</button></td>
+                                    <td>
+                                        <div style="display: flex; align-items: center;">
+                                            ${etiquetaFDS}
+                                            <button class="cancel-btn" data-id="${turno.idEvento || turno.idTurno}">Anular</button>
+                                        </div>
+                                    </td>
                                 </tr>`;
                             }
                         });
