@@ -103,16 +103,27 @@
                 <ul id="lista-dias-bloqueados"></ul>
             </div>
             <div id="vista-agregar" class="vista">
-                <h3>Agregar Disponibilidad Extra (<span class="ciudad-actual-label">Santa Fe</span>)</h3>
-                <p>Utiliza esta función para agregar días excepcionales (ej: Sábados) o extender horarios en días existentes.</p>
+                <h3>Agregar Disponibilidad Extra</h3>
+                <p>Genera turnos masivos para un día completo o un horario específico.</p>
 
                 <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; max-width: 500px;">
-                    <label style="display:block; margin-bottom:10px;">
-                        <strong>Fecha:</strong>
+                    
+                    <label style="display:block; margin-bottom:15px;">
+                        <strong>Agenda de Destino:</strong>
+                        <select id="add-target" style="width:100%; padding:8px; margin-top:5px; border: 1px solid #ccc; border-radius: 4px;">
+                            <option value="santafe">Público General - Santa Fe</option>
+                            <option value="rosario">Público General - Rosario</option>
+                            <option value="fuerzas_santafe">Fuerzas de Seguridad - Santa Fe</option>
+                            <option value="fuerzas_rosario">Fuerzas de Seguridad - Rosario</option>
+                        </select>
+                    </label>
+
+                    <label style="display:block; margin-bottom:15px;">
+                        <strong>Fecha a programar:</strong>
                         <input type="date" id="add-date" style="width:100%; padding:8px; margin-top:5px;">
                     </label>
 
-                    <div style="display:flex; gap:15px; margin-bottom:10px;">
+                    <div style="display:flex; gap:15px; margin-bottom:15px;">
                         <label style="flex:1;">
                             <strong>Hora Inicio:</strong>
                             <input type="time" id="add-start" value="08:00" style="width:100%; padding:8px; margin-top:5px;">
@@ -125,13 +136,12 @@
 
                     <label style="display:block; margin-bottom:20px;">
                         <strong>Duración del turno (minutos):</strong>
-                        <input type="number" id="add-duration" value="10" style="width:100%; padding:8px; margin-top:5px;">
+                        <input type="number" id="add-duration" value="10" min="5" style="width:100%; padding:8px; margin-top:5px;">
                     </label>
 
-                    <button id="btn-generar-extra" class="action-button btn-green" style="width:100%;">Generar Turnos</button>
+                    <button id="btn-generar-extra" class="action-button btn-green" style="width:100%;">Generar Turnos Masivos</button>
                 </div>
             </div>
-
         </main>
     </div>
     <script>
@@ -491,35 +501,35 @@
                     cargarTurnosAgendados();
                 }
             });
-
+                // LÓGICA: GENERAR TURNOS MASIVOS
             const btnGenerarExtra = document.getElementById('btn-generar-extra');
             if(btnGenerarExtra) {
                 btnGenerarExtra.addEventListener('click', async () => {
+                    const target = document.getElementById('add-target').value;
                     const date = document.getElementById('add-date').value;
                     const start = document.getElementById('add-start').value;
                     const end = document.getElementById('add-end').value;
                     const duration = document.getElementById('add-duration').value;
-                    const city = citySelect.value;
 
                     if (!date || !start || !end || !duration) {
                         alert('Por favor completa todos los campos.');
                         return;
                     }
 
-                    if (confirm(`¿Vas a generar turnos para ${city.toUpperCase()} el día ${date} de ${start} a ${end}?\n\nEsto agregará turnos a la agenda existente.`)) {
+                    if (confirm(`¿Vas a generar turnos masivos el día ${date} desde las ${start} hasta las ${end} (cada ${duration} min)?\n\nDestino: ${target.toUpperCase()}`)) {
                         btnGenerarExtra.disabled = true;
-                        btnGenerarExtra.textContent = 'Generando...';
+                        btnGenerarExtra.textContent = 'Generando Masivamente...';
 
                         try {
                             const response = await fetch('/api/admin/agregar-turnos', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ city, date, start, end, duration })
+                                body: JSON.stringify({ target, date, start, end, duration })
                             });
                             const result = await response.json();
                             
                             if(result.status === 'success') {
-                                alert(result.message);
+                                alert(result.message); // Te dirá "Se generaron X turnos"
                                 document.getElementById('add-date').value = ''; 
                                 cargarTurnosAgendados();
                             } else {
@@ -529,7 +539,7 @@
                             alert('Error de conexión.');
                         }
                         btnGenerarExtra.disabled = false;
-                        btnGenerarExtra.textContent = 'Generar Turnos';
+                        btnGenerarExtra.textContent = 'Generar Turnos Masivos';
                     }
                 });
             }

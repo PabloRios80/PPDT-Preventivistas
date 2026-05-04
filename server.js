@@ -100,16 +100,14 @@ app.post('/api/cancelar', async (req, res) => {
         res.status(500).json({ status: 'error', message: 'Error al cancelar el turno.' });
     }
 });
-
-// Endpoint para agregar turnos manualmente (personalizados)
+// Endpoint para agregar turnos MASIVOS
 app.post('/api/admin/agregar-turnos', async (req, res) => {
     try {
-        // Recibimos: date, start, end, duration, city
-        console.log(`[Admin] Agregando turnos extra para: ${req.body.city}`);
+        console.log(`[Admin] Agregando turnos masivos para: ${req.body.target}`);
         
         const response = await axios.post(APPS_SCRIPT_URL, {
             action: 'createCustomSlots',
-            city: req.body.city, // Importante pasar la ciudad
+            target: req.body.target,
             date: req.body.date,
             start: req.body.start,
             end: req.body.end,
