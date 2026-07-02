@@ -1,275 +1,533 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Panel de Preventivistas - IAPOS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body { font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; background-color: #f0f8ff; }
-        .container { background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 30px; max-width: 1200px; margin: auto; }
-        .header-banner { background-color: #005A9C; color: white; padding: 15px 30px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; margin: -30px -30px 30px -30px; }
-        .header-banner h1 { font-size: 2em; color: white; margin: 0; border: none; }
-        .header-banner img { height: 50px; }
-        h2, h3 { color: #005A9C; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; }
-        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
-        th { background-color: #e6f7ff; }
-        
-        .actions-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
-        .action-button { padding: 10px 20px; border-radius: 5px; text-decoration: none; color: white; font-weight: bold; cursor: pointer; border: none; }
-        .btn-green { background-color: #009A44; }
-        .btn-gray { background-color: #6c757d; }
-        .btn-red { background-color: #dc3545; }
+      body {
+        font-family: "Roboto", sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f0f8ff;
+      }
+      .container {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 1200px;
+        margin: auto;
+      }
+      .header-banner {
+        background-color: #005a9c;
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: -30px -30px 30px -30px;
+      }
+      .header-banner h1 {
+        font-size: 2em;
+        color: white;
+        margin: 0;
+        border: none;
+      }
+      .header-banner img {
+        height: 50px;
+      }
+      h2,
+      h3 {
+        color: #005a9c;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 0.9em;
+      }
+      th,
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+      }
+      th {
+        background-color: #e6f7ff;
+      }
 
-        .city-selector {
-            padding: 10px;
-            border-radius: 5px;
-            border: 2px solid #005A9C;
-            color: #005A9C;
-            font-weight: bold;
-            font-size: 1em;
-            margin-right: 15px;
-            background-color: white;
-            cursor: pointer;
-        }
+      .actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .action-button {
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+      }
+      .btn-green {
+        background-color: #009a44;
+      }
+      .btn-gray {
+        background-color: #6c757d;
+      }
+      .btn-red {
+        background-color: #dc3545;
+      }
 
-        .tabs { border-bottom: 2px solid #ccc; margin-bottom: 20px; }
-        .tab-button { background-color: transparent; border: none; border-bottom: 3px solid transparent; padding: 10px 20px; cursor: pointer; font-size: 1.1em; font-weight: bold; color: #666; }
-        .tab-button.active { color: #005A9C; border-bottom: 3px solid #005A9C; }
-        .vista { display: none; }
-        .vista.activa { display: block; }
-        .cancel-btn { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
-        .move-btn { background-color: #009A44; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        #lista-dias-bloqueados { list-style-type: none; padding: 0; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
-        #lista-dias-bloqueados li { background-color: #f8d7da; color: #721c24; padding: 8px; margin-bottom: 5px; border-radius: 4px; }
+      .city-selector {
+        padding: 10px;
+        border-radius: 5px;
+        border: 2px solid #005a9c;
+        color: #005a9c;
+        font-weight: bold;
+        font-size: 1em;
+        margin-right: 15px;
+        background-color: white;
+        cursor: pointer;
+      }
+
+      .tabs {
+        border-bottom: 2px solid #ccc;
+        margin-bottom: 20px;
+      }
+      .tab-button {
+        background-color: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #666;
+      }
+      .tab-button.active {
+        color: #005a9c;
+        border-bottom: 3px solid #005a9c;
+      }
+      .vista {
+        display: none;
+      }
+      .vista.activa {
+        display: block;
+      }
+      .cancel-btn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .move-btn {
+        background-color: #009a44;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      #lista-dias-bloqueados {
+        list-style-type: none;
+        padding: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      #lista-dias-bloqueados li {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 8px;
+        margin-bottom: 5px;
+        border-radius: 4px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <div class="header-banner">
-                <h1>Panel de Preventivistas</h1>
-                <img src="logo_iapos.png" alt="Logo IAPOS">
+      <header>
+        <div class="header-banner">
+          <h1>Panel de Preventivistas</h1>
+          <img src="logo_iapos.png" alt="Logo IAPOS" />
+        </div>
+      </header>
+      <main>
+        <div class="actions-bar">
+          <h2>Panel de Control</h2>
+          <div style="display: flex; align-items: center">
+            <label
+              for="city-select"
+              style="margin-right: 10px; font-weight: bold"
+              >Sede:</label
+            >
+            <select id="city-select" class="city-selector">
+              <option value="santafe">Santa Fe</option>
+              <option value="rosario">Rosario</option>
+              <option value="fuerzas">Fuerzas de Seguridad</option>
+            </select>
+
+            <a
+              href="https://turnera-iapos-web.onrender.com/"
+              target="_blank"
+              class="action-button btn-green"
+              >Nuevo Turno</a
+            >
+            <button
+              id="logout-btn"
+              class="action-button btn-gray"
+              style="margin-left: 10px"
+            >
+              Salir
+            </button>
+          </div>
+        </div>
+        <div class="tabs">
+          <button id="tab-turnos" class="tab-button active">
+            Turnos Agendados
+          </button>
+          <button id="tab-derivaciones" class="tab-button">Derivaciones</button>
+          <button id="tab-bloqueos" class="tab-button">Bloquear Días</button>
+          <button id="tab-agregar" class="tab-button">
+            Agregar Días/Horarios
+          </button>
+        </div>
+
+        <div id="vista-turnos" class="vista activa">
+          <h3>
+            Turnos Agendados (<span class="ciudad-actual-label">Santa Fe</span>)
+          </h3>
+          <table id="turnos-table">
+            <thead>
+              <tr>
+                <th>Fecha y Hora</th>
+                <th>Apellido y Nombre</th>
+                <th>DNI</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="vista-derivaciones" class="vista">
+          <h3>Derivaciones Recibidas</h3>
+          <p style="font-size: 0.8em; color: gray">
+            (Las derivaciones son globales para todas las sedes)
+          </p>
+          <table id="derivaciones-table">
+            <thead>
+              <tr>
+                <th>Fecha Deriv.</th>
+                <th>DNI Paciente</th>
+                <th>Nombre y Apellido</th>
+                <th>Contacto</th>
+                <th>Observaciones</th>
+                <th>Médico Derivador</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="vista-bloqueos" class="vista">
+          <h3>
+            Gestión de Días No Laborables (<span class="ciudad-actual-label"
+              >Santa Fe</span
+            >)
+          </h3>
+          <p>
+            Usa esta herramienta para bloquear días por feriados imprevistos,
+            paros, etc.
+          </p>
+          <div>
+            <input
+              type="date"
+              id="fecha-a-bloquear"
+              style="padding: 8px; border-radius: 5px; border: 1px solid #ccc"
+            />
+            <button id="btn-bloquear" class="action-button btn-red">
+              Bloquear Día
+            </button>
+          </div>
+          <hr style="margin: 20px 0" />
+          <h4>Días actualmente bloqueados:</h4>
+          <ul id="lista-dias-bloqueados"></ul>
+        </div>
+        <div id="vista-agregar" class="vista">
+          <h3>Agregar Disponibilidad Extra</h3>
+          <p>
+            Genera turnos masivos para un día completo o un horario específico.
+          </p>
+
+          <div
+            style="
+              background-color: #f9f9f9;
+              padding: 20px;
+              border-radius: 8px;
+              border: 1px solid #ddd;
+              max-width: 500px;
+            "
+          >
+            <label style="display: block; margin-bottom: 15px">
+              <strong>Agenda de Destino:</strong>
+              <select
+                id="add-target"
+                style="
+                  width: 100%;
+                  padding: 8px;
+                  margin-top: 5px;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+                "
+              >
+                <option value="santafe">Público General - Santa Fe</option>
+                <option value="rosario">Público General - Rosario</option>
+                <option value="fuerzas_santafe">
+                  Fuerzas de Seguridad - Santa Fe
+                </option>
+                <option value="fuerzas_rosario">
+                  Fuerzas de Seguridad - Rosario
+                </option>
+              </select>
+            </label>
+
+            <label style="display: block; margin-bottom: 15px">
+              <strong>Fecha a programar:</strong>
+              <input
+                type="date"
+                id="add-date"
+                style="width: 100%; padding: 8px; margin-top: 5px"
+              />
+            </label>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 15px">
+              <label style="flex: 1">
+                <strong>Hora Inicio:</strong>
+                <input
+                  type="time"
+                  id="add-start"
+                  value="08:00"
+                  style="width: 100%; padding: 8px; margin-top: 5px"
+                />
+              </label>
+              <label style="flex: 1">
+                <strong>Hora Fin:</strong>
+                <input
+                  type="time"
+                  id="add-end"
+                  value="12:00"
+                  style="width: 100%; padding: 8px; margin-top: 5px"
+                />
+              </label>
             </div>
-        </header>
-        <main>
-            <div class="actions-bar">
-                <h2>Panel de Control</h2>
-                <div style="display: flex; align-items: center;">
-                    <label for="city-select" style="margin-right: 10px; font-weight: bold;">Sede:</label>
-                    <select id="city-select" class="city-selector">
-                        <option value="santafe">Santa Fe</option>
-                        <option value="rosario">Rosario</option>
-                        <option value="fuerzas">Fuerzas de Seguridad</option>
-                    </select>
 
-                    <a href="https://turnera-iapos-web.onrender.com/" target="_blank" class="action-button btn-green">Nuevo Turno</a>
-                    <button id="logout-btn" class="action-button btn-gray" style="margin-left: 10px;">Salir</button>
-                </div>
-            </div>
-            <div class="tabs">
-                <button id="tab-turnos" class="tab-button active">Turnos Agendados</button>
-                <button id="tab-derivaciones" class="tab-button">Derivaciones</button>
-                <button id="tab-bloqueos" class="tab-button">Bloquear Días</button>
-                <button id="tab-agregar" class="tab-button">Agregar Días/Horarios</button>
-            </div>
+            <label style="display: block; margin-bottom: 20px">
+              <strong>Duración del turno (minutos):</strong>
+              <input
+                type="number"
+                id="add-duration"
+                value="10"
+                min="5"
+                style="width: 100%; padding: 8px; margin-top: 5px"
+              />
+            </label>
 
-            <div id="vista-turnos" class="vista activa">
-                <h3>Turnos Agendados (<span class="ciudad-actual-label">Santa Fe</span>)</h3>
-                <table id="turnos-table">
-                    <thead><tr><th>Fecha y Hora</th><th>Apellido y Nombre</th><th>DNI</th><th>Email</th><th>Teléfono</th><th>Acciones</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-
-            <div id="vista-derivaciones" class="vista">
-                <h3>Derivaciones Recibidas</h3>
-                <p style="font-size: 0.8em; color: gray;">(Las derivaciones son globales para todas las sedes)</p>
-                <table id="derivaciones-table">
-                    <thead><tr><th>Fecha Deriv.</th><th>DNI Paciente</th><th>Nombre y Apellido</th><th>Contacto</th><th>Observaciones</th><th>Médico Derivador</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-
-            <div id="vista-bloqueos" class="vista">
-                <h3>Gestión de Días No Laborables (<span class="ciudad-actual-label">Santa Fe</span>)</h3>
-                <p>Usa esta herramienta para bloquear días por feriados imprevistos, paros, etc.</p>
-                <div>
-                    <input type="date" id="fecha-a-bloquear" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
-                    <button id="btn-bloquear" class="action-button btn-red">Bloquear Día</button>
-                </div>
-                <hr style="margin: 20px 0;">
-                <h4>Días actualmente bloqueados:</h4>
-                <ul id="lista-dias-bloqueados"></ul>
-            </div>
-            <div id="vista-agregar" class="vista">
-                <h3>Agregar Disponibilidad Extra</h3>
-                <p>Genera turnos masivos para un día completo o un horario específico.</p>
-
-                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; max-width: 500px;">
-                    
-                    <label style="display:block; margin-bottom:15px;">
-                        <strong>Agenda de Destino:</strong>
-                        <select id="add-target" style="width:100%; padding:8px; margin-top:5px; border: 1px solid #ccc; border-radius: 4px;">
-                            <option value="santafe">Público General - Santa Fe</option>
-                            <option value="rosario">Público General - Rosario</option>
-                            <option value="fuerzas_santafe">Fuerzas de Seguridad - Santa Fe</option>
-                            <option value="fuerzas_rosario">Fuerzas de Seguridad - Rosario</option>
-                        </select>
-                    </label>
-
-                    <label style="display:block; margin-bottom:15px;">
-                        <strong>Fecha a programar:</strong>
-                        <input type="date" id="add-date" style="width:100%; padding:8px; margin-top:5px;">
-                    </label>
-
-                    <div style="display:flex; gap:15px; margin-bottom:15px;">
-                        <label style="flex:1;">
-                            <strong>Hora Inicio:</strong>
-                            <input type="time" id="add-start" value="08:00" style="width:100%; padding:8px; margin-top:5px;">
-                        </label>
-                        <label style="flex:1;">
-                            <strong>Hora Fin:</strong>
-                            <input type="time" id="add-end" value="12:00" style="width:100%; padding:8px; margin-top:5px;">
-                        </label>
-                    </div>
-
-                    <label style="display:block; margin-bottom:20px;">
-                        <strong>Duración del turno (minutos):</strong>
-                        <input type="number" id="add-duration" value="10" min="5" style="width:100%; padding:8px; margin-top:5px;">
-                    </label>
-
-                    <button id="btn-generar-extra" class="action-button btn-green" style="width:100%;">Generar Turnos Masivos</button>
-                </div>
-            </div>
-        </main>
+            <button
+              id="btn-generar-extra"
+              class="action-button btn-green"
+              style="width: 100%"
+            >
+              Generar Turnos Masivos
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. VERIFICACIÓN DE LOGIN
-            if (sessionStorage.getItem('preventivista-logueado') !== 'true') {
-                window.location.href = 'login.html';
-                return;
-            }
+      document.addEventListener("DOMContentLoaded", () => {
+        // 1. VERIFICACIÓN DE LOGIN
+        // Capturar token de URL o localStorage
+        const params = new URLSearchParams(window.location.search);
+        const tokenUrl = params.get("token");
+        if (tokenUrl) {
+          localStorage.setItem("dpToken", tokenUrl);
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+        const token = localStorage.getItem("dpToken");
+        if (!token) {
+          window.location.href =
+            "https://acceso.diapreventivoiapos.com/login.html";
+          return;
+        }
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          const ahora = Math.floor(Date.now() / 1000);
+          if (payload.exp && payload.exp < ahora) {
+            localStorage.removeItem("dpToken");
+            window.location.href =
+              "https://acceso.diapreventivoiapos.com/login.html";
+            return;
+          }
+          window.dpPayload = payload;
+        } catch (e) {
+          localStorage.removeItem("dpToken");
+          window.location.href =
+            "https://acceso.diapreventivoiapos.com/login.html";
+          return;
+        }
 
-            // 2. REFERENCIAS A ELEMENTOS
-            const logoutBtn = document.getElementById('logout-btn');
-            const citySelect = document.getElementById('city-select'); 
-            const ciudadLabels = document.querySelectorAll('.ciudad-actual-label'); 
-            
-            // Tabs
-            const tabTurnos = document.getElementById('tab-turnos');
-            const tabDerivaciones = document.getElementById('tab-derivaciones');
-            const tabBloqueos = document.getElementById('tab-bloqueos');
-            const tabAgregar = document.getElementById('tab-agregar');
+        // 2. REFERENCIAS A ELEMENTOS
+        const logoutBtn = document.getElementById("logout-btn");
+        const citySelect = document.getElementById("city-select");
+        const ciudadLabels = document.querySelectorAll(".ciudad-actual-label");
 
-            // Vistas
-            const vistas = {
-                turnos: document.getElementById('vista-turnos'),
-                derivaciones: document.getElementById('vista-derivaciones'),
-                bloqueos: document.getElementById('vista-bloqueos'),
-                agregar: document.getElementById('vista-agregar')
-            };
+        // Tabs
+        const tabTurnos = document.getElementById("tab-turnos");
+        const tabDerivaciones = document.getElementById("tab-derivaciones");
+        const tabBloqueos = document.getElementById("tab-bloqueos");
+        const tabAgregar = document.getElementById("tab-agregar");
 
-            const turnosTableBody = document.querySelector('#turnos-table tbody');
-            const derivacionesTableBody = document.querySelector('#derivaciones-table tbody');
-            const fechaInput = document.getElementById('fecha-a-bloquear');
-            const btnBloquear = document.getElementById('btn-bloquear');
-            const listaDiasBloqueados = document.getElementById('lista-dias-bloqueados');
+        // Vistas
+        const vistas = {
+          turnos: document.getElementById("vista-turnos"),
+          derivaciones: document.getElementById("vista-derivaciones"),
+          bloqueos: document.getElementById("vista-bloqueos"),
+          agregar: document.getElementById("vista-agregar"),
+        };
 
-            // 3. CAMBIO DE CIUDAD
-            const ciudadGuardada = localStorage.getItem('admin-ciudad-preferida') || 'santafe';
-            citySelect.value = ciudadGuardada;
-            actualizarLabelsCiudad(ciudadGuardada);
+        const turnosTableBody = document.querySelector("#turnos-table tbody");
+        const derivacionesTableBody = document.querySelector(
+          "#derivaciones-table tbody",
+        );
+        const fechaInput = document.getElementById("fecha-a-bloquear");
+        const btnBloquear = document.getElementById("btn-bloquear");
+        const listaDiasBloqueados = document.getElementById(
+          "lista-dias-bloqueados",
+        );
 
-            citySelect.addEventListener('change', (e) => {
-                const nuevaCiudad = e.target.value;
-                localStorage.setItem('admin-ciudad-preferida', nuevaCiudad);
-                actualizarLabelsCiudad(nuevaCiudad);
-                recargarDatos(); 
-            });
+        // 3. CAMBIO DE CIUDAD
+        const ciudadGuardada =
+          localStorage.getItem("admin-ciudad-preferida") || "santafe";
+        citySelect.value = ciudadGuardada;
+        actualizarLabelsCiudad(ciudadGuardada);
 
-            function actualizarLabelsCiudad(ciudad) {
-                let nombreCiudad = 'Santa Fe';
-                if(ciudad === 'rosario') nombreCiudad = 'Rosario';
-                if(ciudad === 'fuerzas') nombreCiudad = 'Fuerzas de Seguridad';
-                ciudadLabels.forEach(span => span.textContent = nombreCiudad);
-            }
+        citySelect.addEventListener("change", (e) => {
+          const nuevaCiudad = e.target.value;
+          localStorage.setItem("admin-ciudad-preferida", nuevaCiudad);
+          actualizarLabelsCiudad(nuevaCiudad);
+          recargarDatos();
+        });
 
-            function recargarDatos() {
-                cargarTurnosAgendados();
-                cargarDiasBloqueados();
-                cargarDerivaciones(); 
-            }
+        function actualizarLabelsCiudad(ciudad) {
+          let nombreCiudad = "Santa Fe";
+          if (ciudad === "rosario") nombreCiudad = "Rosario";
+          if (ciudad === "fuerzas") nombreCiudad = "Fuerzas de Seguridad";
+          ciudadLabels.forEach((span) => (span.textContent = nombreCiudad));
+        }
 
-            // 4. LÓGICA DE NAVEGACIÓN
-            function mostrarVista(vistaActiva) {
-                Object.keys(vistas).forEach(key => {
-                    if(vistas[key]) vistas[key].classList.remove('activa');
-                });
-                if(vistas[vistaActiva]) vistas[vistaActiva].classList.add('activa');
-                
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                const btnActivo = document.getElementById(`tab-${vistaActiva}`);
-                if(btnActivo) btnActivo.classList.add('active');
-            }
+        function recargarDatos() {
+          cargarTurnosAgendados();
+          cargarDiasBloqueados();
+          cargarDerivaciones();
+        }
 
-            tabTurnos.addEventListener('click', () => mostrarVista('turnos'));
-            tabDerivaciones.addEventListener('click', () => mostrarVista('derivaciones'));
-            tabBloqueos.addEventListener('click', () => mostrarVista('bloqueos'));
-            if(tabAgregar) {
-                tabAgregar.addEventListener('click', () => mostrarVista('agregar'));
-            }
+        // 4. LÓGICA DE NAVEGACIÓN
+        function mostrarVista(vistaActiva) {
+          Object.keys(vistas).forEach((key) => {
+            if (vistas[key]) vistas[key].classList.remove("activa");
+          });
+          if (vistas[vistaActiva]) vistas[vistaActiva].classList.add("activa");
 
-            logoutBtn.addEventListener('click', () => {
-                sessionStorage.removeItem('preventivista-logueado');
-                window.location.href = 'index.html'; 
-            });
+          document
+            .querySelectorAll(".tab-button")
+            .forEach((btn) => btn.classList.remove("active"));
+          const btnActivo = document.getElementById(`tab-${vistaActiva}`);
+          if (btnActivo) btnActivo.classList.add("active");
+        }
 
-            // 5. FUNCIONES PARA CARGAR DATOS
-            async function cargarTurnosAgendados() {
-                turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
-                const ciudad = citySelect.value;
-                try {
-                    const response = await fetch(`/api/admin/turnos?city=${ciudad}`);
-                    const data = await response.json();
-                    if (data.status === 'success' && data.appointments.length > 0) {
-                        let html = '';
-                        data.appointments.forEach(turno => {
-                            const fecha = new Date(turno.fechaInicio).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-                            if (turno.estado === 'Disponible') {
-                                if (!turno.esFuerza) { // <--- CAMBIO CLAVE AQUÍ: Miramos si el turno es de fuerzas o no
-                                    // Turnos libres en la agenda pública (Santa Fe / Rosario)
-                                    html += `<tr data-date="${turno.fechaInicio}" style="background-color: #f8f9fa;">
+        tabTurnos.addEventListener("click", () => mostrarVista("turnos"));
+        tabDerivaciones.addEventListener("click", () =>
+          mostrarVista("derivaciones"),
+        );
+        tabBloqueos.addEventListener("click", () => mostrarVista("bloqueos"));
+        if (tabAgregar) {
+          tabAgregar.addEventListener("click", () => mostrarVista("agregar"));
+        }
+
+        logoutBtn.addEventListener("click", () => {
+          localStorage.removeItem("dpToken");
+          window.location.href =
+            "https://acceso.diapreventivoiapos.com/login.html";
+        });
+        // 5. FUNCIONES PARA CARGAR DATOS
+        async function cargarTurnosAgendados() {
+          turnosTableBody.innerHTML =
+            '<tr><td colspan="6">Cargando...</td></tr>';
+          const ciudad = citySelect.value;
+          try {
+            const response = await fetch(`/api/admin/turnos?city=${ciudad}`);
+            const data = await response.json();
+            if (data.status === "success" && data.appointments.length > 0) {
+              let html = "";
+              data.appointments.forEach((turno) => {
+                const fecha = new Date(turno.fechaInicio).toLocaleString(
+                  "es-AR",
+                  { dateStyle: "short", timeStyle: "short" },
+                );
+                if (turno.estado === "Disponible") {
+                  if (!turno.esFuerza) {
+                    // <--- CAMBIO CLAVE AQUÍ: Miramos si el turno es de fuerzas o no
+                    // Turnos libres en la agenda pública (Santa Fe / Rosario)
+                    html += `<tr data-date="${turno.fechaInicio}" style="background-color: #f8f9fa;">
                                         <td>${fecha} hs</td>
                                         <td colspan="4" style="color: #6c757d; font-style: italic;">Turno Libre (Público)</td>
                                         <td><button class="action-button btn-green move-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Reservar p/ Fuerzas</button></td>
                                     </tr>`;
-                                } else {
-                                    // Turnos libres en la agenda de Fuerzas (Con botón para devolverlos)
-                                    html += `<tr data-date="${turno.fechaInicio}" style="background-color: #e6f2ff;">
+                  } else {
+                    // Turnos libres en la agenda de Fuerzas (Con botón para devolverlos)
+                    html += `<tr data-date="${turno.fechaInicio}" style="background-color: #e6f2ff;">
                                         <td>${fecha} hs</td>
                                         <td colspan="4" style="color: #005A9C; font-weight: bold;">Turno Reservado para Fuerzas (Libre)</td>
                                         <td><button class="action-button btn-gray return-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Devolver a Público</button></td>
                                     </tr>`;
-                                }
-                            } else {
-                                // Turnos Ocupados
-                                
-                                // 1. Creamos la etiqueta FDS y el color de fondo si es de Fuerzas
-                                const etiquetaFDS = turno.esFuerza 
-                                    ? '<span style="background-color: #005A9C; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 10px;">FDS</span>' 
-                                    : '';
-                                
-                                // Si es de fuerzas, pintamos la fila de un celeste muy suave, si no, sin fondo
-                                const fondoFila = turno.esFuerza ? 'background-color: #e6f2ff;' : '';
+                  }
+                } else {
+                  // Turnos Ocupados
 
-                                // 2. Dibujamos la fila inyectando el color de fondo y la etiqueta FDS
-                                html += `<tr id="turno-${turno.idEvento ? turno.idEvento.replace(/@/g, '-') : ''}" data-date="${turno.fechaInicio}" style="${fondoFila}">
+                  // 1. Creamos la etiqueta FDS y el color de fondo si es de Fuerzas
+                  const etiquetaFDS = turno.esFuerza
+                    ? '<span style="background-color: #005A9C; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 10px;">FDS</span>'
+                    : "";
+
+                  // Si es de fuerzas, pintamos la fila de un celeste muy suave, si no, sin fondo
+                  const fondoFila = turno.esFuerza
+                    ? "background-color: #e6f2ff;"
+                    : "";
+
+                  // 2. Dibujamos la fila inyectando el color de fondo y la etiqueta FDS
+                  html += `<tr id="turno-${turno.idEvento ? turno.idEvento.replace(/@/g, "-") : ""}" data-date="${turno.fechaInicio}" style="${fondoFila}">
                                     <td>${fecha} hs</td>
                                     <td>${turno.apellido}, ${turno.nombre}</td>
                                     <td>${turno.dni}</td>
-                                    <td>${turno.email || ''}</td>
+                                    <td>${turno.email || ""}</td>
                                     <td>${turno.telefono}</td>
                                     <td>
                                         <div style="display: flex; align-items: center;">
@@ -278,275 +536,316 @@
                                         </div>
                                     </td>
                                 </tr>`;
-                            }
-                        });
-                        turnosTableBody.innerHTML = html;
-
-                        // Scroll Automático a "Hoy"
-                        setTimeout(() => {
-                            const hoy = new Date();
-                            hoy.setHours(0, 0, 0, 0); 
-
-                            const filas = turnosTableBody.querySelectorAll('tr[data-date]');
-                            let filaDestino = null;
-
-                            for (let fila of filas) {
-                                const fechaTurno = new Date(fila.getAttribute('data-date'));
-                                if (fechaTurno >= hoy) {
-                                    filaDestino = fila;
-                                    break; 
-                                }
-                            }
-
-                            if (filaDestino) {
-                                filaDestino.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                const colorOriginal = filaDestino.style.backgroundColor || '';
-                                filaDestino.style.backgroundColor = '#e6ffed'; 
-                                setTimeout(() => {
-                                    filaDestino.style.backgroundColor = colorOriginal; 
-                                    filaDestino.style.transition = 'background-color 1.5s ease';
-                                }, 3000);
-                            }
-                        }, 300);
-
-                    } else {
-                        turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados en esta sede.</td></tr>';
-                    }
-                } catch (error) {
-                    turnosTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Error al cargar los turnos.</td></tr>';
                 }
-            }
+              });
+              turnosTableBody.innerHTML = html;
 
-            async function cargarDerivaciones() {
-                derivacionesTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
-                try {
-                    const response = await fetch('/api/admin/derivaciones');
-                    const data = await response.json();
-                    if (data.status === 'success' && data.referrals.length > 0) {
-                        let html = '';
-                        data.referrals.forEach(d => {
-                            const fechaDeriv = new Date(d.fechaDerivacion).toLocaleDateString('es-AR');
-                            html += `<tr><td>${fechaDeriv}</td><td>${d.dni}</td><td>${d.nombre} ${d.apellido}</td><td>${d.telefono}<br>${d.email}</td><td>${d.observaciones || ''}</td><td><strong>${d.medicoDerivador || ''}</strong></td></tr>`;
-                        });
-                        derivacionesTableBody.innerHTML = html;
-                    } else {
-                        derivacionesTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay derivaciones recibidas.</td></tr>';
-                    }
-                } catch (error) {
-                    derivacionesTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Error al cargar las derivaciones.</td></tr>';
+              // Scroll Automático a "Hoy"
+              setTimeout(() => {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+
+                const filas = turnosTableBody.querySelectorAll("tr[data-date]");
+                let filaDestino = null;
+
+                for (let fila of filas) {
+                  const fechaTurno = new Date(fila.getAttribute("data-date"));
+                  if (fechaTurno >= hoy) {
+                    filaDestino = fila;
+                    break;
+                  }
                 }
-            }
 
-            async function cargarDiasBloqueados() {
-                listaDiasBloqueados.innerHTML = '<li>Cargando...</li>';
-                const ciudad = citySelect.value; 
-                const response = await fetch(`/api/admin/dias-bloqueados?city=${ciudad}`);
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    listaDiasBloqueados.innerHTML = '';
-                    if (result.blocked_dates.length > 0) {
-                        result.blocked_dates.forEach(date => {
-                            const [year, month, day] = date.split('-'); 
-                            const fechaObjeto = new Date(year, month - 1, day);
-                            const fechaFormateada = fechaObjeto.toLocaleDateString('es-AR', { dateStyle: 'full' });
-                            listaDiasBloqueados.innerHTML += `
+                if (filaDestino) {
+                  filaDestino.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                  const colorOriginal = filaDestino.style.backgroundColor || "";
+                  filaDestino.style.backgroundColor = "#e6ffed";
+                  setTimeout(() => {
+                    filaDestino.style.backgroundColor = colorOriginal;
+                    filaDestino.style.transition = "background-color 1.5s ease";
+                  }, 3000);
+                }
+              }, 300);
+            } else {
+              turnosTableBody.innerHTML =
+                '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados en esta sede.</td></tr>';
+            }
+          } catch (error) {
+            turnosTableBody.innerHTML =
+              '<tr><td colspan="6" style="text-align:center;">Error al cargar los turnos.</td></tr>';
+          }
+        }
+
+        async function cargarDerivaciones() {
+          derivacionesTableBody.innerHTML =
+            '<tr><td colspan="6">Cargando...</td></tr>';
+          try {
+            const response = await fetch("/api/admin/derivaciones");
+            const data = await response.json();
+            if (data.status === "success" && data.referrals.length > 0) {
+              let html = "";
+              data.referrals.forEach((d) => {
+                const fechaDeriv = new Date(
+                  d.fechaDerivacion,
+                ).toLocaleDateString("es-AR");
+                html += `<tr><td>${fechaDeriv}</td><td>${d.dni}</td><td>${d.nombre} ${d.apellido}</td><td>${d.telefono}<br>${d.email}</td><td>${d.observaciones || ""}</td><td><strong>${d.medicoDerivador || ""}</strong></td></tr>`;
+              });
+              derivacionesTableBody.innerHTML = html;
+            } else {
+              derivacionesTableBody.innerHTML =
+                '<tr><td colspan="6" style="text-align:center;">No hay derivaciones recibidas.</td></tr>';
+            }
+          } catch (error) {
+            derivacionesTableBody.innerHTML =
+              '<tr><td colspan="6" style="text-align:center;">Error al cargar las derivaciones.</td></tr>';
+          }
+        }
+
+        async function cargarDiasBloqueados() {
+          listaDiasBloqueados.innerHTML = "<li>Cargando...</li>";
+          const ciudad = citySelect.value;
+          const response = await fetch(
+            `/api/admin/dias-bloqueados?city=${ciudad}`,
+          );
+          const result = await response.json();
+
+          if (result.status === "success") {
+            listaDiasBloqueados.innerHTML = "";
+            if (result.blocked_dates.length > 0) {
+              result.blocked_dates.forEach((date) => {
+                const [year, month, day] = date.split("-");
+                const fechaObjeto = new Date(year, month - 1, day);
+                const fechaFormateada = fechaObjeto.toLocaleDateString(
+                  "es-AR",
+                  { dateStyle: "full" },
+                );
+                listaDiasBloqueados.innerHTML += `
                                 <li style="display: flex; justify-content: space-between; align-items: center;">
                                     <span>${fechaFormateada}</span>
                                     <button class="btn-desbloquear" data-date="${date}" style="background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.8em; margin-left: 10px;">
                                         Desbloquear
                                     </button>
                                 </li>`;
-                        });
-                    } else {
-                        listaDiasBloqueados.innerHTML = '<li>No hay días bloqueados manualmente.</li>';
-                    }
-                }
+              });
+            } else {
+              listaDiasBloqueados.innerHTML =
+                "<li>No hay días bloqueados manualmente.</li>";
             }
+          }
+        }
 
-            listaDiasBloqueados.addEventListener('click', async (e) => {
-                if (e.target.classList.contains('btn-desbloquear')) {
-                    const dateToUnblock = e.target.dataset.date; 
-                    const ciudad = citySelect.value; 
-                    
-                    if (confirm(`¿Quieres desbloquear el día ${dateToUnblock}? \n\nEl sistema intentará regenerar los turnos para ese día automáticamente.`)) {
-                        const originalText = e.target.textContent;
-                        e.target.disabled = true;
-                        e.target.textContent = 'Procesando...';
+        listaDiasBloqueados.addEventListener("click", async (e) => {
+          if (e.target.classList.contains("btn-desbloquear")) {
+            const dateToUnblock = e.target.dataset.date;
+            const ciudad = citySelect.value;
 
-                        try {
-                            const response = await fetch('/api/admin/desbloquear-dia', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ date: dateToUnblock, city: ciudad }) 
-                            });
-                            const result = await response.json();
+            if (
+              confirm(
+                `¿Quieres desbloquear el día ${dateToUnblock}? \n\nEl sistema intentará regenerar los turnos para ese día automáticamente.`,
+              )
+            ) {
+              const originalText = e.target.textContent;
+              e.target.disabled = true;
+              e.target.textContent = "Procesando...";
 
-                            if (result.status === 'success') {
-                                alert('Día desbloqueado correctamente.\nLos turnos han sido regenerados.');
-                                cargarDiasBloqueados(); 
-                                cargarTurnosAgendados(); 
-                            } else {
-                                alert('Error: ' + result.message);
-                                e.target.disabled = false;
-                                e.target.textContent = originalText;
-                            }
-                        } catch (error) {
-                            alert('Error de conexión.');
-                            e.target.disabled = false;
-                            e.target.textContent = originalText;
-                        }
-                    }
-                }
-            });
-// 6. LÓGICA DE ACCIONES (Anular, MOVER, DEVOLVER)
-            turnosTableBody.addEventListener('click', async (e) => {
-                
-                // Acción ANULAR
-                if (e.target.classList.contains('cancel-btn')) {
-                    const eventId = e.target.dataset.id;
-                    if (confirm('¿Estás seguro de que quieres anular este turno?')) {
-                        const response = await fetch('/api/cancelar', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ eventId: eventId })
-                        });
-                        const result = await response.json();
-                        if (result.status === 'success') {
-                            alert('Turno anulado con éxito.');
-                            cargarTurnosAgendados(); 
-                        } else { alert('Error al anular el turno: ' + result.message); }
-                    }
-                }
-
-                // Acción MOVER A FUERZAS
-                if (e.target.classList.contains('move-btn')) {
-                    const idTurno = e.target.dataset.id;
-                    const ciudad = citySelect.value;
-                    
-                    if (confirm('¿Mover este turno a la agenda de Fuerzas de Seguridad?\n\nDesaparecerá de la agenda pública inmediatamente.')) {
-                        e.target.disabled = true;
-                        e.target.textContent = 'Moviendo...';
-                        try {
-                            const response = await fetch('/api/admin/mover-fuerzas', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ idTurno: idTurno, city: ciudad })
-                            });
-                            const result = await response.json();
-                            if (result.status === 'success') {
-                                alert('Turno movido con éxito.');
-                                cargarTurnosAgendados(); 
-                            } else {
-                                alert('Error: ' + result.message);
-                                e.target.disabled = false;
-                                e.target.textContent = 'Reservar p/ Fuerzas';
-                            }
-                        } catch (err) {
-                            alert('Error de conexión.');
-                            e.target.disabled = false;
-                            e.target.textContent = 'Reservar p/ Fuerzas';
-                        }
-                    }
-                }
-
-                // Acción DEVOLVER A PÚBLICO
-                if (e.target.classList.contains('return-btn')) {
-                    const idTurno = e.target.dataset.id;
-                    
-                    if (confirm('¿Devolver este turno a la agenda pública?\n\nCualquier afiliado podrá volver a reservarlo.')) {
-                        e.target.disabled = true;
-                        e.target.textContent = 'Devolviendo...';
-                        try {
-                            const response = await fetch('/api/admin/devolver-publico', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ idTurno: idTurno })
-                            });
-                            const result = await response.json();
-                            if (result.status === 'success') {
-                                alert('Turno devuelto con éxito.');
-                                cargarTurnosAgendados(); 
-                            } else {
-                                alert('Error: ' + result.message);
-                                e.target.disabled = false;
-                                e.target.textContent = 'Devolver a Público';
-                            }
-                        } catch (err) {
-                            alert('Error de conexión.');
-                            e.target.disabled = false;
-                            e.target.textContent = 'Devolver a Público';
-                        }
-                    }
-                }
-            });
-
-            btnBloquear.addEventListener('click', async () => {
-                const dateToBlock = fechaInput.value;
-                if (!dateToBlock) { alert('Por favor, selecciona una fecha.'); return; }
-                const ciudad = citySelect.value;
-                if (confirm(`¿Estás seguro de que quieres bloquear el día ${dateToBlock} en la sede ${ciudad.toUpperCase()}?`)) {
-                    btnBloquear.disabled = true;
-                    btnBloquear.textContent = 'Bloqueando...';
-                    const response = await fetch('/api/admin/bloquear-dia', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ date: dateToBlock, city: ciudad })
-                    });
-                    const result = await response.json();
-                    alert(result.message);
-                    btnBloquear.disabled = false;
-                    btnBloquear.textContent = 'Bloquear Día';
-                    cargarDiasBloqueados();
-                    cargarTurnosAgendados();
-                }
-            });
-                // LÓGICA: GENERAR TURNOS MASIVOS
-            const btnGenerarExtra = document.getElementById('btn-generar-extra');
-            if(btnGenerarExtra) {
-                btnGenerarExtra.addEventListener('click', async () => {
-                    const target = document.getElementById('add-target').value;
-                    const date = document.getElementById('add-date').value;
-                    const start = document.getElementById('add-start').value;
-                    const end = document.getElementById('add-end').value;
-                    const duration = document.getElementById('add-duration').value;
-
-                    if (!date || !start || !end || !duration) {
-                        alert('Por favor completa todos los campos.');
-                        return;
-                    }
-
-                    if (confirm(`¿Vas a generar turnos masivos el día ${date} desde las ${start} hasta las ${end} (cada ${duration} min)?\n\nDestino: ${target.toUpperCase()}`)) {
-                        btnGenerarExtra.disabled = true;
-                        btnGenerarExtra.textContent = 'Generando Masivamente...';
-
-                        try {
-                            const response = await fetch('/api/admin/agregar-turnos', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ target, date, start, end, duration })
-                            });
-                            const result = await response.json();
-                            
-                            if(result.status === 'success') {
-                                alert(result.message); // Te dirá "Se generaron X turnos"
-                                document.getElementById('add-date').value = ''; 
-                                cargarTurnosAgendados();
-                            } else {
-                                alert('Error: ' + result.message);
-                            }
-                        } catch (e) {
-                            alert('Error de conexión.');
-                        }
-                        btnGenerarExtra.disabled = false;
-                        btnGenerarExtra.textContent = 'Generar Turnos Masivos';
-                    }
+              try {
+                const response = await fetch("/api/admin/desbloquear-dia", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ date: dateToUnblock, city: ciudad }),
                 });
+                const result = await response.json();
+
+                if (result.status === "success") {
+                  alert(
+                    "Día desbloqueado correctamente.\nLos turnos han sido regenerados.",
+                  );
+                  cargarDiasBloqueados();
+                  cargarTurnosAgendados();
+                } else {
+                  alert("Error: " + result.message);
+                  e.target.disabled = false;
+                  e.target.textContent = originalText;
+                }
+              } catch (error) {
+                alert("Error de conexión.");
+                e.target.disabled = false;
+                e.target.textContent = originalText;
+              }
+            }
+          }
+        });
+        // 6. LÓGICA DE ACCIONES (Anular, MOVER, DEVOLVER)
+        turnosTableBody.addEventListener("click", async (e) => {
+          // Acción ANULAR
+          if (e.target.classList.contains("cancel-btn")) {
+            const eventId = e.target.dataset.id;
+            if (confirm("¿Estás seguro de que quieres anular este turno?")) {
+              const response = await fetch("/api/cancelar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ eventId: eventId }),
+              });
+              const result = await response.json();
+              if (result.status === "success") {
+                alert("Turno anulado con éxito.");
+                cargarTurnosAgendados();
+              } else {
+                alert("Error al anular el turno: " + result.message);
+              }
+            }
+          }
+
+          // Acción MOVER A FUERZAS
+          if (e.target.classList.contains("move-btn")) {
+            const idTurno = e.target.dataset.id;
+            const ciudad = citySelect.value;
+
+            if (
+              confirm(
+                "¿Mover este turno a la agenda de Fuerzas de Seguridad?\n\nDesaparecerá de la agenda pública inmediatamente.",
+              )
+            ) {
+              e.target.disabled = true;
+              e.target.textContent = "Moviendo...";
+              try {
+                const response = await fetch("/api/admin/mover-fuerzas", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ idTurno: idTurno, city: ciudad }),
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                  alert("Turno movido con éxito.");
+                  cargarTurnosAgendados();
+                } else {
+                  alert("Error: " + result.message);
+                  e.target.disabled = false;
+                  e.target.textContent = "Reservar p/ Fuerzas";
+                }
+              } catch (err) {
+                alert("Error de conexión.");
+                e.target.disabled = false;
+                e.target.textContent = "Reservar p/ Fuerzas";
+              }
+            }
+          }
+
+          // Acción DEVOLVER A PÚBLICO
+          if (e.target.classList.contains("return-btn")) {
+            const idTurno = e.target.dataset.id;
+
+            if (
+              confirm(
+                "¿Devolver este turno a la agenda pública?\n\nCualquier afiliado podrá volver a reservarlo.",
+              )
+            ) {
+              e.target.disabled = true;
+              e.target.textContent = "Devolviendo...";
+              try {
+                const response = await fetch("/api/admin/devolver-publico", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ idTurno: idTurno }),
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                  alert("Turno devuelto con éxito.");
+                  cargarTurnosAgendados();
+                } else {
+                  alert("Error: " + result.message);
+                  e.target.disabled = false;
+                  e.target.textContent = "Devolver a Público";
+                }
+              } catch (err) {
+                alert("Error de conexión.");
+                e.target.disabled = false;
+                e.target.textContent = "Devolver a Público";
+              }
+            }
+          }
+        });
+
+        btnBloquear.addEventListener("click", async () => {
+          const dateToBlock = fechaInput.value;
+          if (!dateToBlock) {
+            alert("Por favor, selecciona una fecha.");
+            return;
+          }
+          const ciudad = citySelect.value;
+          if (
+            confirm(
+              `¿Estás seguro de que quieres bloquear el día ${dateToBlock} en la sede ${ciudad.toUpperCase()}?`,
+            )
+          ) {
+            btnBloquear.disabled = true;
+            btnBloquear.textContent = "Bloqueando...";
+            const response = await fetch("/api/admin/bloquear-dia", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ date: dateToBlock, city: ciudad }),
+            });
+            const result = await response.json();
+            alert(result.message);
+            btnBloquear.disabled = false;
+            btnBloquear.textContent = "Bloquear Día";
+            cargarDiasBloqueados();
+            cargarTurnosAgendados();
+          }
+        });
+        // LÓGICA: GENERAR TURNOS MASIVOS
+        const btnGenerarExtra = document.getElementById("btn-generar-extra");
+        if (btnGenerarExtra) {
+          btnGenerarExtra.addEventListener("click", async () => {
+            const target = document.getElementById("add-target").value;
+            const date = document.getElementById("add-date").value;
+            const start = document.getElementById("add-start").value;
+            const end = document.getElementById("add-end").value;
+            const duration = document.getElementById("add-duration").value;
+
+            if (!date || !start || !end || !duration) {
+              alert("Por favor completa todos los campos.");
+              return;
             }
 
-            // 7. CARGA INICIAL
-            recargarDatos();
-        });
+            if (
+              confirm(
+                `¿Vas a generar turnos masivos el día ${date} desde las ${start} hasta las ${end} (cada ${duration} min)?\n\nDestino: ${target.toUpperCase()}`,
+              )
+            ) {
+              btnGenerarExtra.disabled = true;
+              btnGenerarExtra.textContent = "Generando Masivamente...";
+
+              try {
+                const response = await fetch("/api/admin/agregar-turnos", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ target, date, start, end, duration }),
+                });
+                const result = await response.json();
+
+                if (result.status === "success") {
+                  alert(result.message); // Te dirá "Se generaron X turnos"
+                  document.getElementById("add-date").value = "";
+                  cargarTurnosAgendados();
+                } else {
+                  alert("Error: " + result.message);
+                }
+              } catch (e) {
+                alert("Error de conexión.");
+              }
+              btnGenerarExtra.disabled = false;
+              btnGenerarExtra.textContent = "Generar Turnos Masivos";
+            }
+          });
+        }
+
+        // 7. CARGA INICIAL
+        recargarDatos();
+      });
     </script>
-</body>
+  </body>
 </html>
