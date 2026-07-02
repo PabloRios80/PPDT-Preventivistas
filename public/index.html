@@ -1,104 +1,159 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Acceso Preventivistas - IAPOS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #f0f8ff; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; box-sizing: border-box; }
-        .portal-container { background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 500px; position: relative; overflow: hidden; /* Necesario para el banner */ }
-        
-        /* --- INICIO DE LA MODIFICACIÓN (CSS) --- */
-        .header-banner {
-            background-color: #005A9C; /* Azul IAPOS */
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            /* Truco para que ocupe todo el ancho del contenedor padre */
-            margin: -40px -40px 30px -40px; 
-            border-bottom: 3px solid #00447e;
-        }
-        .header-banner img {
-            height: 45px;
-            max-width: 150px;
-        }
-        .header-banner h1 {
-            font-size: 1.8em;
-            color: white;
-            margin: 0;
-        }
-        .description-text {
-            font-size: 1em;
-            line-height: 1.6;
-            color: #555;
-            margin-bottom: 25px;
-            padding: 20px 0;
-            border-top: 1px solid #eee;
-            border-bottom: 1px solid #eee;
-        }
-        /* --- FIN DE LA MODIFICACIÓN (CSS) --- */
-        
-        .description-text strong { color: #005A9C; }
-        input { width: 100%; box-sizing: border-box; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
-        button { background-color: #009A44; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-size: 1.1em; font-weight: bold; }
-        .error { color: red; margin-top: 10px; font-weight: bold; }
-        .registro-link { margin-top: 25px; font-size: 0.9em; }
-        .registro-link a { color: #005A9C; font-weight: bold; text-decoration: none; }
-    </style>
-</head>
-<body>
-    <div class="portal-container">
-        <header class="header-banner">
-            <img src="logo_iapos.png" alt="Logo IAPOS">
-            <h1>Día Preventivo</h1>
-        </header>
-        <div class="description-text">
-            <p>El <strong>Preventivista</strong> es un profesional especializado en todas las actividades del Día Preventivo: sus etapas, formas de ingreso, resultados y seguimiento de casos críticos. Es el <strong>pivot</strong> del programa, ya que es el encargado de la <strong>interacción y comunicación</strong> entre los afiliados, profesionales, prestadores e IAPOS. Este es el portal de ingreso a sus actividades.</p>
-        </div>
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #f0f8ff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      .portal-container {
+        background-color: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        width: 100%;
+        max-width: 500px;
+        position: relative;
+        overflow: hidden; /* Necesario para el banner */
+      }
 
-        <form id="login-form">
-            <input type="email" id="user" name="user" placeholder="Usuario (email)" required>
-            <input type="password" id="pass" name="pass" placeholder="Contraseña" required>
-            <button type="submit">Ingresar</button>
-        </form>
-        <p id="error-message" class="error" style="display:none;"></p>
-        <div class="registro-link">
-            <span>¿No tienes acceso?</span>
-            <a href="registro-preventivistas.html">Regístrate aquí.</a>
-        </div>
+      /* --- INICIO DE LA MODIFICACIÓN (CSS) --- */
+      .header-banner {
+        background-color: #005a9c; /* Azul IAPOS */
+        color: white;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        /* Truco para que ocupe todo el ancho del contenedor padre */
+        margin: -40px -40px 30px -40px;
+        border-bottom: 3px solid #00447e;
+      }
+      .header-banner img {
+        height: 45px;
+        max-width: 150px;
+      }
+      .header-banner h1 {
+        font-size: 1.8em;
+        color: white;
+        margin: 0;
+      }
+      .description-text {
+        font-size: 1em;
+        line-height: 1.6;
+        color: #555;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+      }
+      /* --- FIN DE LA MODIFICACIÓN (CSS) --- */
+
+      .description-text strong {
+        color: #005a9c;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+      }
+      button {
+        background-color: #009a44;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 1.1em;
+        font-weight: bold;
+      }
+      .error {
+        color: red;
+        margin-top: 10px;
+        font-weight: bold;
+      }
+      .registro-link {
+        margin-top: 25px;
+        font-size: 0.9em;
+      }
+      .registro-link a {
+        color: #005a9c;
+        font-weight: bold;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="portal-container">
+      <header class="header-banner">
+        <img src="logo_iapos.png" alt="Logo IAPOS" />
+        <h1>Día Preventivo</h1>
+      </header>
+      <div class="description-text">
+        <p>
+          El <strong>Preventivista</strong> es un profesional especializado en
+          todas las actividades del Día Preventivo: sus etapas, formas de
+          ingreso, resultados y seguimiento de casos críticos. Es el
+          <strong>pivot</strong> del programa, ya que es el encargado de la
+          <strong>interacción y comunicación</strong> entre los afiliados,
+          profesionales, prestadores e IAPOS. Este es el portal de ingreso a sus
+          actividades.
+        </p>
+      </div>
+
+      <form id="login-form">
+        <input
+          type="email"
+          id="user"
+          name="user"
+          placeholder="Usuario (email)"
+          required
+        />
+        <input
+          type="password"
+          id="pass"
+          name="pass"
+          placeholder="Contraseña"
+          required
+        />
+        <button type="submit">Ingresar</button>
+      </form>
+      <p id="error-message" class="error" style="display: none"></p>
+      <div class="registro-link">
+        <span>¿No tienes acceso?</span>
+        <a href="registro-preventivistas.html">Regístrate aquí.</a>
+      </div>
     </div>
     <script>
-        // Tu script de login no necesita cambios
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = Object.fromEntries(new FormData(e.target).entries());
-            const submitButton = e.target.querySelector('button');
-            const errorMessage = document.getElementById('error-message');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Verificando...';
-            errorMessage.style.display = 'none';
-            try {
-                const response = await fetch('/api/preventivistas/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    sessionStorage.setItem('preventivista-logueado', 'true');
-                    window.location.href = 'admin.html';
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                errorMessage.textContent = error.message;
-                errorMessage.style.display = 'block';
-                submitButton.disabled = false;
-                submitButton.textContent = 'Ingresar';
-            }
-        });
+      // Capturar token de URL
+      const params = new URLSearchParams(window.location.search);
+      const tokenUrl = params.get("token");
+      if (tokenUrl) {
+        localStorage.setItem("dpToken", tokenUrl);
+        window.location.href = "admin.html";
+      } else {
+        // Sin token, redirigir al login centralizado
+        window.location.href =
+          "https://acceso.diapreventivoiapos.com/login.html";
+      }
     </script>
-</body>
+  </body>
 </html>
