@@ -928,68 +928,72 @@
           .toISOString()
           .split("T")[0];
 
-        async function cargarSedesCierre() {
-          try {
-            const res = await fetch("/api/sedes-cierre");
-            const data = await res.json();
-            const sedes = data.sedes || [];
+        // 7. CARGA INICIAL
+        recargarDatos();
+      });
 
-            const selectFiltro = document.getElementById("cierre-sede");
-            const selectModal = document.getElementById("nc-sede");
+      async function cargarSedesCierre() {
+        try {
+          const res = await fetch("/api/sedes-cierre");
+          const data = await res.json();
+          const sedes = data.sedes || [];
 
-            selectFiltro.innerHTML =
-              '<option value="">Todas</option>' +
-              sedes
-                .map(
-                  (s) =>
-                    `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
-                )
-                .join("");
-            selectModal.innerHTML =
-              '<option value="">Seleccioná sede</option>' +
-              sedes
-                .map(
-                  (s) =>
-                    `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
-                )
-                .join("");
-          } catch (e) {
-            console.error("Error cargando sedes:", e);
-          }
-        }
+          const selectFiltro = document.getElementById("cierre-sede");
+          const selectModal = document.getElementById("nc-sede");
 
-        async function cargarAgendaCierre() {
-          const fecha = document.getElementById("cierre-fecha").value;
-          const sede = document.getElementById("cierre-sede").value;
-          const tbody = document.getElementById("tbody-cierre");
-
-          tbody.innerHTML =
-            '<tr><td colspan="6" style="text-align:center;">Cargando...</td></tr>';
-
-          try {
-            let url = `/api/agenda-cierre?fecha=${fecha}`;
-            if (sede) url += `&id_sede_dp=${sede}`;
-
-            const res = await fetch(url);
-            const data = await res.json();
-            const turnos = data.turnos || [];
-
-            if (turnos.length === 0) {
-              tbody.innerHTML =
-                '<tr><td colspan="6" style="text-align:center; color:#999;">No hay turnos para esta fecha.</td></tr>';
-              return;
-            }
-
-            const COLORES_ESTADO = {
-              AGENDADO: "background:#e6f7ff; color:#005A9C;",
-              PRESENTE: "background:#d4edda; color:#155724;",
-              REALIZADO: "background:#f0f0f0; color:#666;",
-              CANCELADO: "background:#f8d7da; color:#721c24;",
-            };
-
-            tbody.innerHTML = turnos
+          selectFiltro.innerHTML =
+            '<option value="">Todas</option>' +
+            sedes
               .map(
-                (t) => `
+                (s) =>
+                  `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
+              )
+              .join("");
+          selectModal.innerHTML =
+            '<option value="">Seleccioná sede</option>' +
+            sedes
+              .map(
+                (s) =>
+                  `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
+              )
+              .join("");
+        } catch (e) {
+          console.error("Error cargando sedes:", e);
+        }
+      }
+
+      async function cargarAgendaCierre() {
+        const fecha = document.getElementById("cierre-fecha").value;
+        const sede = document.getElementById("cierre-sede").value;
+        const tbody = document.getElementById("tbody-cierre");
+
+        tbody.innerHTML =
+          '<tr><td colspan="6" style="text-align:center;">Cargando...</td></tr>';
+
+        try {
+          let url = `/api/agenda-cierre?fecha=${fecha}`;
+          if (sede) url += `&id_sede_dp=${sede}`;
+
+          const res = await fetch(url);
+          const data = await res.json();
+          const turnos = data.turnos || [];
+
+          if (turnos.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="6" style="text-align:center; color:#999;">No hay turnos para esta fecha.</td></tr>';
+            return;
+          }
+
+          const COLORES_ESTADO = {
+            AGENDADO: "background:#e6f7ff; color:#005A9C;",
+            PRESENTE: "background:#d4edda; color:#155724;",
+            REALIZADO: "background:#f0f0f0; color:#666;",
+            CANCELADO: "background:#f8d7da; color:#721c24;",
+          };
+
+          tbody.innerHTML = turnos
+            .map(
+              (t) => `
             <tr>
                 <td><strong>${t.hora || "S/H"}</strong></td>
                 <td>${t.apellido_y_nombre || "S/N"}</td>
@@ -1021,96 +1025,92 @@
                     </button>
                 </td>
             </tr>`,
-              )
-              .join("");
-          } catch (e) {
-            tbody.innerHTML =
-              '<tr><td colspan="6" style="text-align:center; color:red;">Error al cargar.</td></tr>';
-          }
+            )
+            .join("");
+        } catch (e) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" style="text-align:center; color:red;">Error al cargar.</td></tr>';
+        }
+      }
+
+      async function cambiarEstadoCierre(id, estado) {
+        try {
+          await fetch(`/api/agenda-cierre/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ estado }),
+          });
+          cargarAgendaCierre();
+        } catch (e) {
+          alert("Error al actualizar estado.");
+        }
+      }
+
+      async function eliminarTurnoCierre(id) {
+        if (!confirm("¿Eliminás este turno de cierre?")) return;
+        try {
+          await fetch(`/api/agenda-cierre/${id}`, { method: "DELETE" });
+          cargarAgendaCierre();
+        } catch (e) {
+          alert("Error al eliminar.");
+        }
+      }
+
+      function abrirModalNuevoTurnoCierre() {
+        cargarSedesCierre();
+        document.getElementById("modal-nuevo-cierre").style.display = "flex";
+      }
+
+      function cerrarModalNuevoTurnoCierre() {
+        document.getElementById("modal-nuevo-cierre").style.display = "none";
+        document.getElementById("nc-dni").value = "";
+        document.getElementById("nc-nombre").value = "";
+        document.getElementById("nc-hora").value = "";
+        document.getElementById("nc-medico").value = "";
+        document.getElementById("nc-obs").value = "";
+      }
+
+      async function guardarNuevoTurnoCierre() {
+        const dni = document.getElementById("nc-dni").value.trim();
+        const nombre = document.getElementById("nc-nombre").value.trim();
+        const fecha = document.getElementById("nc-fecha").value;
+        const hora = document.getElementById("nc-hora").value;
+        const medico = document.getElementById("nc-medico").value.trim();
+        const sede = document.getElementById("nc-sede").value;
+        const obs = document.getElementById("nc-obs").value.trim();
+
+        if (!dni || !fecha || !hora || !medico || !sede) {
+          alert("Completá DNI, fecha, hora, médico y sede.");
+          return;
         }
 
-        async function cambiarEstadoCierre(id, estado) {
-          try {
-            await fetch(`/api/agenda-cierre/${id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ estado }),
-            });
+        try {
+          const res = await fetch("/api/agenda-cierre", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              dni,
+              apellido_y_nombre: nombre,
+              fecha,
+              hora,
+              nombre_medico: medico,
+              id_sede_dp: parseInt(sede),
+              observaciones: obs || null,
+              estado: "AGENDADO",
+            }),
+          });
+          const data = await res.json();
+          if (data.status === "success") {
+            cerrarModalNuevoTurnoCierre();
+            document.getElementById("cierre-fecha").value = fecha;
             cargarAgendaCierre();
-          } catch (e) {
-            alert("Error al actualizar estado.");
+          } else {
+            alert("Error al guardar: " + data.message);
           }
+        } catch (e) {
+          alert("Error de conexión.");
         }
-
-        async function eliminarTurnoCierre(id) {
-          if (!confirm("¿Eliminás este turno de cierre?")) return;
-          try {
-            await fetch(`/api/agenda-cierre/${id}`, { method: "DELETE" });
-            cargarAgendaCierre();
-          } catch (e) {
-            alert("Error al eliminar.");
-          }
-        }
-
-        function abrirModalNuevoTurnoCierre() {
-          cargarSedesCierre();
-          document.getElementById("modal-nuevo-cierre").style.display = "flex";
-        }
-
-        function cerrarModalNuevoTurnoCierre() {
-          document.getElementById("modal-nuevo-cierre").style.display = "none";
-          document.getElementById("nc-dni").value = "";
-          document.getElementById("nc-nombre").value = "";
-          document.getElementById("nc-hora").value = "";
-          document.getElementById("nc-medico").value = "";
-          document.getElementById("nc-obs").value = "";
-        }
-
-        async function guardarNuevoTurnoCierre() {
-          const dni = document.getElementById("nc-dni").value.trim();
-          const nombre = document.getElementById("nc-nombre").value.trim();
-          const fecha = document.getElementById("nc-fecha").value;
-          const hora = document.getElementById("nc-hora").value;
-          const medico = document.getElementById("nc-medico").value.trim();
-          const sede = document.getElementById("nc-sede").value;
-          const obs = document.getElementById("nc-obs").value.trim();
-
-          if (!dni || !fecha || !hora || !medico || !sede) {
-            alert("Completá DNI, fecha, hora, médico y sede.");
-            return;
-          }
-
-          try {
-            const res = await fetch("/api/agenda-cierre", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                dni,
-                apellido_y_nombre: nombre,
-                fecha,
-                hora,
-                nombre_medico: medico,
-                id_sede_dp: parseInt(sede),
-                observaciones: obs || null,
-                estado: "AGENDADO",
-              }),
-            });
-            const data = await res.json();
-            if (data.status === "success") {
-              cerrarModalNuevoTurnoCierre();
-              document.getElementById("cierre-fecha").value = fecha;
-              cargarAgendaCierre();
-            } else {
-              alert("Error al guardar: " + data.message);
-            }
-          } catch (e) {
-            alert("Error de conexión.");
-          }
-        }
-
-        // 7. CARGA INICIAL
-        recargarDatos();
-      });
+      }
     </script>
     <div
       id="modal-nuevo-cierre"
