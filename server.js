@@ -187,6 +187,81 @@ app.get('/api/admin/derivaciones', async (req, res) => {
     }
 });
 
+// ── AGENDA CIERRE DP ──
+
+// Obtener agenda por sede y fecha
+app.get('/api/agenda-cierre', async (req, res) => {
+    const { id_sede_dp, fecha } = req.query;
+    try {
+        let query = supabase
+            .from('agenda_cierre_dp')
+            .select('*')
+            .order('hora', { ascending: true });
+        if (id_sede_dp) query = query.eq('id_sede_dp', id_sede_dp);
+        if (fecha) query = query.eq('fecha', fecha);
+        const { data, error } = await query;
+        if (error) throw error;
+        res.json({ status: 'success', turnos: data });
+    } catch(e) {
+        res.status(500).json({ status: 'error', message: e.message });
+    }
+});
+
+// Agendar turno de cierre
+app.post('/api/agenda-cierre', async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('agenda_cierre_dp')
+            .insert(req.body);
+        if (error) throw error;
+        res.json({ status: 'success' });
+    } catch(e) {
+        res.status(500).json({ status: 'error', message: e.message });
+    }
+});
+
+// Actualizar estado (PRESENTE, REALIZADO, CANCELADO)
+app.patch('/api/agenda-cierre/:id', async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('agenda_cierre_dp')
+            .update(req.body)
+            .eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ status: 'success' });
+    } catch(e) {
+        res.status(500).json({ status: 'error', message: e.message });
+    }
+});
+
+// Eliminar turno
+app.delete('/api/agenda-cierre/:id', async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('agenda_cierre_dp')
+            .delete()
+            .eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ status: 'success' });
+    } catch(e) {
+        res.status(500).json({ status: 'error', message: e.message });
+    }
+});
+
+app.get('/api/sedes-cierre', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('sedes_dp')
+            .select('*')
+            .eq('activo', true)
+            .order('ciudad');
+        if (error) throw error;
+        res.json({ sedes: data });
+    } catch(e) {
+        res.status(500).json({ sedes: [] });
+    }
+});
+
 // =========================================================
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

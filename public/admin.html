@@ -206,6 +206,7 @@
           <button id="tab-agregar" class="tab-button">
             Agregar Días/Horarios
           </button>
+          <button id="tab-cierre" class="tab-button">Agenda Cierre DP</button>
         </div>
 
         <div id="vista-turnos" class="vista activa">
@@ -246,7 +247,6 @@
             <tbody></tbody>
           </table>
         </div>
-
         <div id="vista-bloqueos" class="vista">
           <h3>
             Gestión de Días No Laborables (<span class="ciudad-actual-label"
@@ -271,12 +271,12 @@
           <h4>Días actualmente bloqueados:</h4>
           <ul id="lista-dias-bloqueados"></ul>
         </div>
+
         <div id="vista-agregar" class="vista">
           <h3>Agregar Disponibilidad Extra</h3>
           <p>
             Genera turnos masivos para un día completo o un horario específico.
           </p>
-
           <div
             style="
               background-color: #f9f9f9;
@@ -308,7 +308,6 @@
                 </option>
               </select>
             </label>
-
             <label style="display: block; margin-bottom: 15px">
               <strong>Fecha a programar:</strong>
               <input
@@ -317,7 +316,6 @@
                 style="width: 100%; padding: 8px; margin-top: 5px"
               />
             </label>
-
             <div style="display: flex; gap: 15px; margin-bottom: 15px">
               <label style="flex: 1">
                 <strong>Hora Inicio:</strong>
@@ -338,7 +336,6 @@
                 />
               </label>
             </div>
-
             <label style="display: block; margin-bottom: 20px">
               <strong>Duración del turno (minutos):</strong>
               <input
@@ -349,7 +346,6 @@
                 style="width: 100%; padding: 8px; margin-top: 5px"
               />
             </label>
-
             <button
               id="btn-generar-extra"
               class="action-button btn-green"
@@ -358,6 +354,76 @@
               Generar Turnos Masivos
             </button>
           </div>
+        </div>
+
+        <div id="vista-cierre" class="vista">
+          <h3>Agenda de Cierre DP</h3>
+          <div
+            style="
+              display: flex;
+              gap: 15px;
+              align-items: flex-end;
+              margin-bottom: 20px;
+              flex-wrap: wrap;
+            "
+          >
+            <div>
+              <label
+                style="font-weight: bold; display: block; margin-bottom: 5px"
+                >Fecha</label
+              >
+              <input
+                type="date"
+                id="cierre-fecha"
+                style="padding: 8px; border-radius: 5px; border: 1px solid #ccc"
+              />
+            </div>
+            <div>
+              <label
+                style="font-weight: bold; display: block; margin-bottom: 5px"
+                >Sede</label
+              >
+              <select
+                id="cierre-sede"
+                style="padding: 8px; border-radius: 5px; border: 1px solid #ccc"
+              >
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <button
+              onclick="cargarAgendaCierre()"
+              class="action-button btn-green"
+              style="height: 36px"
+            >
+              Ver agenda
+            </button>
+            <button
+              onclick="abrirModalNuevoTurnoCierre()"
+              class="action-button btn-green"
+              style="height: 36px; background: #005a9c"
+            >
+              + Nuevo turno
+            </button>
+          </div>
+          <table id="tabla-cierre">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Afiliado</th>
+                <th>DNI</th>
+                <th>Médico</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-cierre">
+              <tr>
+                <td colspan="6" style="text-align: center; color: #999">
+                  Seleccioná fecha y sede para ver la agenda.
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </main>
     </div>
@@ -842,10 +908,377 @@
             }
           });
         }
+        // Tab cierre
+        const tabCierre = document.getElementById("tab-cierre");
+        if (tabCierre) {
+          tabCierre.addEventListener("click", () => {
+            mostrarVista("cierre");
+            cargarSedesCierre();
+          });
+        }
+
+        // Agregar 'cierre' al objeto vistas
+        vistas.cierre = document.getElementById("vista-cierre");
+
+        // Setear fecha de hoy por defecto
+        document.getElementById("cierre-fecha").value = new Date()
+          .toISOString()
+          .split("T")[0];
+        document.getElementById("nc-fecha").value = new Date()
+          .toISOString()
+          .split("T")[0];
+
+        async function cargarSedesCierre() {
+          try {
+            const res = await fetch("/api/sedes-cierre");
+            const data = await res.json();
+            const sedes = data.sedes || [];
+
+            const selectFiltro = document.getElementById("cierre-sede");
+            const selectModal = document.getElementById("nc-sede");
+
+            selectFiltro.innerHTML =
+              '<option value="">Todas</option>' +
+              sedes
+                .map(
+                  (s) =>
+                    `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
+                )
+                .join("");
+            selectModal.innerHTML =
+              '<option value="">Seleccioná sede</option>' +
+              sedes
+                .map(
+                  (s) =>
+                    `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
+                )
+                .join("");
+          } catch (e) {
+            console.error("Error cargando sedes:", e);
+          }
+        }
+
+        async function cargarAgendaCierre() {
+          const fecha = document.getElementById("cierre-fecha").value;
+          const sede = document.getElementById("cierre-sede").value;
+          const tbody = document.getElementById("tbody-cierre");
+
+          tbody.innerHTML =
+            '<tr><td colspan="6" style="text-align:center;">Cargando...</td></tr>';
+
+          try {
+            let url = `/api/agenda-cierre?fecha=${fecha}`;
+            if (sede) url += `&id_sede_dp=${sede}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            const turnos = data.turnos || [];
+
+            if (turnos.length === 0) {
+              tbody.innerHTML =
+                '<tr><td colspan="6" style="text-align:center; color:#999;">No hay turnos para esta fecha.</td></tr>';
+              return;
+            }
+
+            const COLORES_ESTADO = {
+              AGENDADO: "background:#e6f7ff; color:#005A9C;",
+              PRESENTE: "background:#d4edda; color:#155724;",
+              REALIZADO: "background:#f0f0f0; color:#666;",
+              CANCELADO: "background:#f8d7da; color:#721c24;",
+            };
+
+            tbody.innerHTML = turnos
+              .map(
+                (t) => `
+            <tr>
+                <td><strong>${t.hora || "S/H"}</strong></td>
+                <td>${t.apellido_y_nombre || "S/N"}</td>
+                <td>${t.dni}</td>
+                <td>${t.nombre_medico || "S/M"}</td>
+                <td><span style="padding:4px 10px; border-radius:20px; font-size:0.85em; font-weight:bold; ${COLORES_ESTADO[t.estado] || ""}">${t.estado}</span></td>
+                <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                    ${
+                      t.estado === "AGENDADO"
+                        ? `
+                        <button onclick="cambiarEstadoCierre(${t.id}, 'PRESENTE')" 
+                            style="background:#009A44; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">
+                            ✓ Presente
+                        </button>`
+                        : ""
+                    }
+                    ${
+                      t.estado === "PRESENTE"
+                        ? `
+                        <button onclick="cambiarEstadoCierre(${t.id}, 'REALIZADO')"
+                            style="background:#005A9C; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">
+                            ✓ Realizado
+                        </button>`
+                        : ""
+                    }
+                    <button onclick="eliminarTurnoCierre(${t.id})"
+                        style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>`,
+              )
+              .join("");
+          } catch (e) {
+            tbody.innerHTML =
+              '<tr><td colspan="6" style="text-align:center; color:red;">Error al cargar.</td></tr>';
+          }
+        }
+
+        async function cambiarEstadoCierre(id, estado) {
+          try {
+            await fetch(`/api/agenda-cierre/${id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ estado }),
+            });
+            cargarAgendaCierre();
+          } catch (e) {
+            alert("Error al actualizar estado.");
+          }
+        }
+
+        async function eliminarTurnoCierre(id) {
+          if (!confirm("¿Eliminás este turno de cierre?")) return;
+          try {
+            await fetch(`/api/agenda-cierre/${id}`, { method: "DELETE" });
+            cargarAgendaCierre();
+          } catch (e) {
+            alert("Error al eliminar.");
+          }
+        }
+
+        function abrirModalNuevoTurnoCierre() {
+          cargarSedesCierre();
+          document.getElementById("modal-nuevo-cierre").style.display = "flex";
+        }
+
+        function cerrarModalNuevoTurnoCierre() {
+          document.getElementById("modal-nuevo-cierre").style.display = "none";
+          document.getElementById("nc-dni").value = "";
+          document.getElementById("nc-nombre").value = "";
+          document.getElementById("nc-hora").value = "";
+          document.getElementById("nc-medico").value = "";
+          document.getElementById("nc-obs").value = "";
+        }
+
+        async function guardarNuevoTurnoCierre() {
+          const dni = document.getElementById("nc-dni").value.trim();
+          const nombre = document.getElementById("nc-nombre").value.trim();
+          const fecha = document.getElementById("nc-fecha").value;
+          const hora = document.getElementById("nc-hora").value;
+          const medico = document.getElementById("nc-medico").value.trim();
+          const sede = document.getElementById("nc-sede").value;
+          const obs = document.getElementById("nc-obs").value.trim();
+
+          if (!dni || !fecha || !hora || !medico || !sede) {
+            alert("Completá DNI, fecha, hora, médico y sede.");
+            return;
+          }
+
+          try {
+            const res = await fetch("/api/agenda-cierre", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                dni,
+                apellido_y_nombre: nombre,
+                fecha,
+                hora,
+                nombre_medico: medico,
+                id_sede_dp: parseInt(sede),
+                observaciones: obs || null,
+                estado: "AGENDADO",
+              }),
+            });
+            const data = await res.json();
+            if (data.status === "success") {
+              cerrarModalNuevoTurnoCierre();
+              document.getElementById("cierre-fecha").value = fecha;
+              cargarAgendaCierre();
+            } else {
+              alert("Error al guardar: " + data.message);
+            }
+          } catch (e) {
+            alert("Error de conexión.");
+          }
+        }
 
         // 7. CARGA INICIAL
         recargarDatos();
       });
     </script>
+    <div
+      id="modal-nuevo-cierre"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: white;
+          border-radius: 10px;
+          padding: 30px;
+          max-width: 480px;
+          width: 100%;
+          margin: 20px;
+        "
+      >
+        <h3 style="color: #005a9c; margin-top: 0">Nuevo Turno de Cierre DP</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 4px"
+              >DNI del afiliado</label
+            >
+            <input
+              type="text"
+              id="nc-dni"
+              maxlength="9"
+              placeholder="Ingresá el DNI..."
+              style="
+                width: 100%;
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+          <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 4px"
+              >Apellido y Nombre</label
+            >
+            <input
+              type="text"
+              id="nc-nombre"
+              placeholder="Apellido, Nombre"
+              style="
+                width: 100%;
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+          <div style="display: flex; gap: 10px">
+            <div style="flex: 1">
+              <label
+                style="font-weight: bold; display: block; margin-bottom: 4px"
+                >Fecha</label
+              >
+              <input
+                type="date"
+                id="nc-fecha"
+                style="
+                  width: 100%;
+                  padding: 8px;
+                  border-radius: 5px;
+                  border: 1px solid #ccc;
+                  box-sizing: border-box;
+                "
+              />
+            </div>
+            <div style="flex: 1">
+              <label
+                style="font-weight: bold; display: block; margin-bottom: 4px"
+                >Hora</label
+              >
+              <input
+                type="time"
+                id="nc-hora"
+                style="
+                  width: 100%;
+                  padding: 8px;
+                  border-radius: 5px;
+                  border: 1px solid #ccc;
+                  box-sizing: border-box;
+                "
+              />
+            </div>
+          </div>
+          <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 4px"
+              >Médico</label
+            >
+            <input
+              type="text"
+              id="nc-medico"
+              placeholder="Nombre del médico"
+              style="
+                width: 100%;
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
+              "
+            />
+          </div>
+          <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 4px"
+              >Sede</label
+            >
+            <select
+              id="nc-sede"
+              style="
+                width: 100%;
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
+              "
+            ></select>
+          </div>
+          <div>
+            <label style="font-weight: bold; display: block; margin-bottom: 4px"
+              >Observaciones</label
+            >
+            <textarea
+              id="nc-obs"
+              rows="2"
+              style="
+                width: 100%;
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
+                resize: vertical;
+              "
+            ></textarea>
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+          "
+        >
+          <button
+            onclick="cerrarModalNuevoTurnoCierre()"
+            class="action-button btn-gray"
+          >
+            Cancelar
+          </button>
+          <button
+            onclick="guardarNuevoTurnoCierre()"
+            class="action-button btn-green"
+          >
+            Guardar turno
+          </button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
