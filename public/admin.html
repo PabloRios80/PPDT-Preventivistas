@@ -271,139 +271,50 @@
           <h4>Días actualmente bloqueados:</h4>
           <ul id="lista-dias-bloqueados"></ul>
         </div>
-
-        <div id="vista-agregar" class="vista">
+<div id="vista-agregar" class="vista">
           <h3>Agregar Disponibilidad Extra</h3>
-          <p>
-            Genera turnos masivos para un día completo o un horario específico.
-          </p>
-          <div
-            style="
-              background-color: #f9f9f9;
-              padding: 20px;
-              border-radius: 8px;
-              border: 1px solid #ddd;
-              max-width: 500px;
-            "
-          >
-            <label style="display: block; margin-bottom: 15px">
+          <p>Genera turnos masivos para un día completo o un horario específico.</p>
+          <div style="background-color:#f9f9f9; padding:20px; border-radius:8px; border:1px solid #ddd; max-width:500px;">
+            <label style="display:block; margin-bottom:15px;">
               <strong>Agenda de Destino:</strong>
-              <select
-                id="add-target"
-                style="
-                  width: 100%;
-                  padding: 8px;
-                  margin-top: 5px;
-                  border: 1px solid #ccc;
-                  border-radius: 4px;
-                "
-              >
+              <select id="add-target" style="width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px;">
                 <option value="santafe">Público General - Santa Fe</option>
                 <option value="rosario">Público General - Rosario</option>
-                <option value="fuerzas_santafe">
-                  Fuerzas de Seguridad - Santa Fe
-                </option>
-                <option value="fuerzas_rosario">
-                  Fuerzas de Seguridad - Rosario
-                </option>
+                <option value="fuerzas_santafe">Fuerzas de Seguridad - Santa Fe</option>
+                <option value="fuerzas_rosario">Fuerzas de Seguridad - Rosario</option>
               </select>
             </label>
-            <label style="display: block; margin-bottom: 15px">
+            <label style="display:block; margin-bottom:15px;">
               <strong>Fecha a programar:</strong>
-              <input
-                type="date"
-                id="add-date"
-                style="width: 100%; padding: 8px; margin-top: 5px"
-              />
+              <input type="date" id="add-date" style="width:100%; padding:8px; margin-top:5px;" />
             </label>
-            <div style="display: flex; gap: 15px; margin-bottom: 15px">
-              <label style="flex: 1">
+            <div style="display:flex; gap:15px; margin-bottom:15px;">
+              <label style="flex:1;">
                 <strong>Hora Inicio:</strong>
-                <input
-                  type="time"
-                  id="add-start"
-                  value="08:00"
-                  style="width: 100%; padding: 8px; margin-top: 5px"
-                />
+                <input type="time" id="add-start" value="08:00" style="width:100%; padding:8px; margin-top:5px;" />
               </label>
-              <label style="flex: 1">
+              <label style="flex:1;">
                 <strong>Hora Fin:</strong>
-                <input
-                  type="time"
-                  id="add-end"
-                  value="12:00"
-                  style="width: 100%; padding: 8px; margin-top: 5px"
-                />
+                <input type="time" id="add-end" value="12:00" style="width:100%; padding:8px; margin-top:5px;" />
               </label>
             </div>
-            <label style="display: block; margin-bottom: 20px">
+            <label style="display:block; margin-bottom:20px;">
               <strong>Duración del turno (minutos):</strong>
-              <input
-                type="number"
-                id="add-duration"
-                value="10"
-                min="5"
-                style="width: 100%; padding: 8px; margin-top: 5px"
-              />
+              <input type="number" id="add-duration" value="10" min="5" style="width:100%; padding:8px; margin-top:5px;" />
             </label>
-            <button
-              id="btn-generar-extra"
-              class="action-button btn-green"
-              style="width: 100%"
-            >
-              Generar Turnos Masivos
-            </button>
+            <button id="btn-generar-extra" class="action-button btn-green" style="width:100%;">Generar Turnos Masivos</button>
           </div>
         </div>
 
         <div id="vista-cierre" class="vista">
           <h3>Agenda de Cierre DP</h3>
-          <div
-            style="
-              display: flex;
-              gap: 15px;
-              align-items: flex-end;
-              margin-bottom: 20px;
-              flex-wrap: wrap;
-            "
-          >
+          <div style="display:flex; gap:15px; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap;">
             <div>
-              <label
-                style="font-weight: bold; display: block; margin-bottom: 5px"
-                >Fecha</label
-              >
-              <input
-                type="date"
-                id="cierre-fecha"
-                style="padding: 8px; border-radius: 5px; border: 1px solid #ccc"
-              />
+              <label style="font-weight:bold; display:block; margin-bottom:5px;">Fecha</label>
+              <input type="date" id="cierre-fecha" style="padding:8px; border-radius:5px; border:1px solid #ccc;" />
             </div>
-            <div>
-              <label
-                style="font-weight: bold; display: block; margin-bottom: 5px"
-                >Sede</label
-              >
-              <select
-                id="cierre-sede"
-                style="padding: 8px; border-radius: 5px; border: 1px solid #ccc"
-              >
-                <option value="">Todas</option>
-              </select>
-            </div>
-            <button
-              onclick="cargarAgendaCierre()"
-              class="action-button btn-green"
-              style="height: 36px"
-            >
-              Ver agenda
-            </button>
-            <button
-              onclick="abrirModalNuevoTurnoCierre()"
-              class="action-button btn-green"
-              style="height: 36px; background: #005a9c"
-            >
-              + Nuevo turno
-            </button>
+            <button onclick="cargarAgendaCierre()" class="action-button btn-green" style="height:36px;">Ver agenda</button>
+            <button onclick="abrirModalNuevoTurnoCierre()" class="action-button btn-green" style="height:36px; background:#005A9C;">+ Nuevo turno</button>
           </div>
           <table id="tabla-cierre">
             <thead>
@@ -417,17 +328,14 @@
               </tr>
             </thead>
             <tbody id="tbody-cierre">
-              <tr>
-                <td colspan="6" style="text-align: center; color: #999">
-                  Seleccioná fecha y sede para ver la agenda.
-                </td>
-              </tr>
+              <tr><td colspan="6" style="text-align:center; color:#999;">Seleccioná fecha para ver la agenda.</td></tr>
             </tbody>
           </table>
         </div>
       </main>
     </div>
-    <script>
+
+<script>
       document.addEventListener("DOMContentLoaded", () => {
         // 1. VERIFICACIÓN DE LOGIN
         // Capturar token de URL o localStorage
