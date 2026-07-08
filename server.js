@@ -158,12 +158,10 @@ app.get("/api/admin/dias-bloqueados", async (req, res) => {
     });
     res.json(response.data);
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        status: "error",
-        message: "No se pudieron cargar los días bloqueados.",
-      });
+    res.status(500).json({
+      status: "error",
+      message: "No se pudieron cargar los días bloqueados.",
+    });
   }
 });
 
@@ -304,20 +302,37 @@ app.get("/api/medicos-cierre/:id_sede_dp", async (req, res) => {
     res.status(500).json({ status: "error", message: e.message });
   }
 });
-
-// Médicos disponibles en una fecha (filtra por día de semana)
 app.get("/api/medicos-disponibles", async (req, res) => {
   const { id_sede_dp, fecha } = req.query;
   try {
     const diaSemana = new Date(fecha + "T12:00:00").getDay();
-    const { data, error } = await supabase
+
+    // Primero traer médicos de la sede
+    const { data: medicos } = await supabase
+      .from("medicos_cierre_dp")
+      .select("id, nombre")
+      .eq("id_sede_dp", id_sede_dp)
+      .eq("activo", true);
+
+    if (!medicos || medicos.length === 0)
+      return res.json({ status: "success", disponibles: [] });
+
+    const idsMedicos = medicos.map((m) => m.id);
+
+    // Luego traer disponibilidad de esos médicos para ese día
+    const { data: disp } = await supabase
       .from("disponibilidad_medico_cierre")
-      .select("*, medicos_cierre_dp(*)")
-      .eq("activo", true)
+      .select("*")
+      .in("id_medico", idsMedicos)
       .eq("dia_semana", diaSemana)
-      .eq("medicos_cierre_dp.id_sede_dp", id_sede_dp);
-    if (error) throw error;
-    const disponibles = (data || []).filter((d) => d.medicos_cierre_dp);
+      .eq("activo", true);
+
+    // Combinar
+    const disponibles = (disp || []).map((d) => ({
+      ...d,
+      medicos_cierre_dp: medicos.find((m) => m.id === d.id_medico),
+    }));
+
     res.json({ status: "success", disponibles });
   } catch (e) {
     res.status(500).json({ status: "error", message: e.message });
@@ -419,6 +434,74 @@ app.get("/api/verificar-afiliado/:dni", async (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ esActivo: false, error: e.message });
+  }
+});
+
+// Agregar médico
+app.post("/api/medicos-cierre", async (req, res) => {
+  try {
+    const { error } = await supabase.from("medicos_cierre_dp").insert(req.body);
+    if (error) throw error;
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Desactivar médico
+app.patch("/api/medicos-cierre/:id", async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("medicos_cierre_dp")
+      .update(req.body)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Traer disponibilidad de un médico
+app.get("/api/disponibilidad-medico/:id_medico", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("disponibilidad_medico_cierre")
+      .select("*")
+      .eq("id_medico", req.params.id_medico)
+      .eq("activo", true)
+      .order("dia_semana");
+    if (error) throw error;
+    res.json({ status: "success", disponibilidad: data });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Agregar disponibilidad
+app.post("/api/disponibilidad-medico", async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("disponibilidad_medico_cierre")
+      .insert(req.body);
+    if (error) throw error;
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Eliminar disponibilidad
+app.delete("/api/disponibilidad-medico/:id", async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("disponibilidad_medico_cierre")
+      .delete()
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
   }
 });
 
