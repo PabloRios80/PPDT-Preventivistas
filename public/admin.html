@@ -1116,38 +1116,14 @@
       });
 
       async function cargarSedesCierre() {
-        try {
-          const res = await fetch("/api/sedes-cierre");
-          const data = await res.json();
-          const sedes = data.sedes || [];
-
-          const selectFiltro = document.getElementById("cierre-sede");
-          const selectModal = document.getElementById("nc-sede");
-
-          selectFiltro.innerHTML =
-            '<option value="">Todas</option>' +
-            sedes
-              .map(
-                (s) =>
-                  `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
-              )
-              .join("");
-          selectModal.innerHTML =
-            '<option value="">Seleccioná sede</option>' +
-            sedes
-              .map(
-                (s) =>
-                  `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
-              )
-              .join("");
-        } catch (e) {
-          console.error("Error cargando sedes:", e);
-        }
-      }
+    const idSede = window.dpPayload?.id_sede_dp || '';
+    const selectModal = document.getElementById("nc-sede");
+    if (selectModal) selectModal.value = idSede;
+}
 
       async function cargarAgendaCierre() {
         const fecha = document.getElementById("cierre-fecha").value;
-        const sede = document.getElementById("cierre-sede").value;
+        const sede = window.dpPayload?.id_sede_dp || '';
         const tbody = document.getElementById("tbody-cierre");
 
         tbody.innerHTML =
