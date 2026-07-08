@@ -271,50 +271,126 @@
           <h4>Días actualmente bloqueados:</h4>
           <ul id="lista-dias-bloqueados"></ul>
         </div>
-<div id="vista-agregar" class="vista">
+        <div id="vista-agregar" class="vista">
           <h3>Agregar Disponibilidad Extra</h3>
-          <p>Genera turnos masivos para un día completo o un horario específico.</p>
-          <div style="background-color:#f9f9f9; padding:20px; border-radius:8px; border:1px solid #ddd; max-width:500px;">
-            <label style="display:block; margin-bottom:15px;">
+          <p>
+            Genera turnos masivos para un día completo o un horario específico.
+          </p>
+          <div
+            style="
+              background-color: #f9f9f9;
+              padding: 20px;
+              border-radius: 8px;
+              border: 1px solid #ddd;
+              max-width: 500px;
+            "
+          >
+            <label style="display: block; margin-bottom: 15px">
               <strong>Agenda de Destino:</strong>
-              <select id="add-target" style="width:100%; padding:8px; margin-top:5px; border:1px solid #ccc; border-radius:4px;">
+              <select
+                id="add-target"
+                style="
+                  width: 100%;
+                  padding: 8px;
+                  margin-top: 5px;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+                "
+              >
                 <option value="santafe">Público General - Santa Fe</option>
                 <option value="rosario">Público General - Rosario</option>
-                <option value="fuerzas_santafe">Fuerzas de Seguridad - Santa Fe</option>
-                <option value="fuerzas_rosario">Fuerzas de Seguridad - Rosario</option>
+                <option value="fuerzas_santafe">
+                  Fuerzas de Seguridad - Santa Fe
+                </option>
+                <option value="fuerzas_rosario">
+                  Fuerzas de Seguridad - Rosario
+                </option>
               </select>
             </label>
-            <label style="display:block; margin-bottom:15px;">
+            <label style="display: block; margin-bottom: 15px">
               <strong>Fecha a programar:</strong>
-              <input type="date" id="add-date" style="width:100%; padding:8px; margin-top:5px;" />
+              <input
+                type="date"
+                id="add-date"
+                style="width: 100%; padding: 8px; margin-top: 5px"
+              />
             </label>
-            <div style="display:flex; gap:15px; margin-bottom:15px;">
-              <label style="flex:1;">
+            <div style="display: flex; gap: 15px; margin-bottom: 15px">
+              <label style="flex: 1">
                 <strong>Hora Inicio:</strong>
-                <input type="time" id="add-start" value="08:00" style="width:100%; padding:8px; margin-top:5px;" />
+                <input
+                  type="time"
+                  id="add-start"
+                  value="08:00"
+                  style="width: 100%; padding: 8px; margin-top: 5px"
+                />
               </label>
-              <label style="flex:1;">
+              <label style="flex: 1">
                 <strong>Hora Fin:</strong>
-                <input type="time" id="add-end" value="12:00" style="width:100%; padding:8px; margin-top:5px;" />
+                <input
+                  type="time"
+                  id="add-end"
+                  value="12:00"
+                  style="width: 100%; padding: 8px; margin-top: 5px"
+                />
               </label>
             </div>
-            <label style="display:block; margin-bottom:20px;">
+            <label style="display: block; margin-bottom: 20px">
               <strong>Duración del turno (minutos):</strong>
-              <input type="number" id="add-duration" value="10" min="5" style="width:100%; padding:8px; margin-top:5px;" />
+              <input
+                type="number"
+                id="add-duration"
+                value="10"
+                min="5"
+                style="width: 100%; padding: 8px; margin-top: 5px"
+              />
             </label>
-            <button id="btn-generar-extra" class="action-button btn-green" style="width:100%;">Generar Turnos Masivos</button>
+            <button
+              id="btn-generar-extra"
+              class="action-button btn-green"
+              style="width: 100%"
+            >
+              Generar Turnos Masivos
+            </button>
           </div>
         </div>
 
         <div id="vista-cierre" class="vista">
           <h3>Agenda de Cierre DP</h3>
-          <div style="display:flex; gap:15px; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap;">
+          <div
+            style="
+              display: flex;
+              gap: 15px;
+              align-items: flex-end;
+              margin-bottom: 20px;
+              flex-wrap: wrap;
+            "
+          >
             <div>
-              <label style="font-weight:bold; display:block; margin-bottom:5px;">Fecha</label>
-              <input type="date" id="cierre-fecha" style="padding:8px; border-radius:5px; border:1px solid #ccc;" />
+              <label
+                style="font-weight: bold; display: block; margin-bottom: 5px"
+                >Fecha</label
+              >
+              <input
+                type="date"
+                id="cierre-fecha"
+                style="padding: 8px; border-radius: 5px; border: 1px solid #ccc"
+              />
             </div>
-            <button onclick="cargarAgendaCierre()" class="action-button btn-green" style="height:36px;">Ver agenda</button>
-            <button onclick="abrirModalNuevoTurnoCierre()" class="action-button btn-green" style="height:36px; background:#005A9C;">+ Nuevo turno</button>
+            <button
+              onclick="cargarAgendaCierre()"
+              class="action-button btn-green"
+              style="height: 36px"
+            >
+              Ver agenda
+            </button>
+            <button
+              onclick="abrirModalNuevoTurnoCierre()"
+              class="action-button btn-green"
+              style="height: 36px; background: #005a9c"
+            >
+              + Nuevo turno
+            </button>
           </div>
           <table id="tabla-cierre">
             <thead>
@@ -328,14 +404,18 @@
               </tr>
             </thead>
             <tbody id="tbody-cierre">
-              <tr><td colspan="6" style="text-align:center; color:#999;">Seleccioná fecha para ver la agenda.</td></tr>
+              <tr>
+                <td colspan="6" style="text-align: center; color: #999">
+                  Seleccioná fecha para ver la agenda.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
       </main>
     </div>
 
-<script>
+    <script>
       document.addEventListener("DOMContentLoaded", () => {
         // 1. VERIFICACIÓN DE LOGIN
         // Capturar token de URL o localStorage
@@ -963,243 +1043,352 @@
           alert("Error al eliminar.");
         }
       }
-function abrirModalNuevoTurnoCierre() {
-    // Setear sede desde el token JWT
-    const payload = window.dpPayload;
-    const idSede = payload?.id_sede_dp || '';
-    document.getElementById('nc-sede').value = idSede;
-    document.getElementById('nc-fecha').value = new Date().toISOString().split('T')[0];
-    document.getElementById('nc-medico-select').innerHTML = '<option value="">— Primero seleccioná una fecha —</option>';
-    document.getElementById('nc-slots').innerHTML = '<span style="color:#999; font-size:0.9em;">Seleccioná médico y fecha primero.</span>';
-    document.getElementById('nc-hora-seleccionada').value = '';
-    document.getElementById('nc-dni').value = '';
-    document.getElementById('nc-afiliado-info').innerHTML = '';
-    document.getElementById('nc-obs').value = '';
-    document.getElementById('nc-medico-id').value = '';
-    document.getElementById('nc-medico-nombre').value = '';
-    document.getElementById('modal-nuevo-cierre').style.display = 'flex';
-    cargarMedicosDisponibles();
-}
+      function abrirModalNuevoTurnoCierre() {
+        // Setear sede desde el token JWT
+        const payload = window.dpPayload;
+        const idSede = payload?.id_sede_dp || "";
+        document.getElementById("nc-sede").value = idSede;
+        document.getElementById("nc-fecha").value = new Date()
+          .toISOString()
+          .split("T")[0];
+        document.getElementById("nc-medico-select").innerHTML =
+          '<option value="">— Primero seleccioná una fecha —</option>';
+        document.getElementById("nc-slots").innerHTML =
+          '<span style="color:#999; font-size:0.9em;">Seleccioná médico y fecha primero.</span>';
+        document.getElementById("nc-hora-seleccionada").value = "";
+        document.getElementById("nc-dni").value = "";
+        document.getElementById("nc-afiliado-info").innerHTML = "";
+        document.getElementById("nc-obs").value = "";
+        document.getElementById("nc-medico-id").value = "";
+        document.getElementById("nc-medico-nombre").value = "";
+        document.getElementById("modal-nuevo-cierre").style.display = "flex";
+        cargarMedicosDisponibles();
+      }
 
-function cerrarModalNuevoTurnoCierre() {
-    document.getElementById('modal-nuevo-cierre').style.display = 'none';
-}
+      function cerrarModalNuevoTurnoCierre() {
+        document.getElementById("modal-nuevo-cierre").style.display = "none";
+      }
 
-async function cargarMedicosDisponibles() {
-    const fecha = document.getElementById('nc-fecha').value;
-    const idSede = document.getElementById('nc-sede').value;
-    const select = document.getElementById('nc-medico-select');
+      async function cargarMedicosDisponibles() {
+        const fecha = document.getElementById("nc-fecha").value;
+        const idSede = document.getElementById("nc-sede").value;
+        const select = document.getElementById("nc-medico-select");
 
-    if (!fecha || !idSede) return;
+        if (!fecha || !idSede) return;
 
-    select.innerHTML = '<option value="">Cargando...</option>';
-    document.getElementById('nc-slots').innerHTML = '<span style="color:#999; font-size:0.9em;">Seleccioná un médico.</span>';
-    document.getElementById('nc-hora-seleccionada').value = '';
+        select.innerHTML = '<option value="">Cargando...</option>';
+        document.getElementById("nc-slots").innerHTML =
+          '<span style="color:#999; font-size:0.9em;">Seleccioná un médico.</span>';
+        document.getElementById("nc-hora-seleccionada").value = "";
 
-    try {
-        const res = await fetch(`/api/medicos-disponibles?id_sede_dp=${idSede}&fecha=${fecha}`);
-        const data = await res.json();
-        const disponibles = data.disponibles || [];
+        try {
+          const res = await fetch(
+            `/api/medicos-disponibles?id_sede_dp=${idSede}&fecha=${fecha}`,
+          );
+          const data = await res.json();
+          const disponibles = data.disponibles || [];
 
-        if (disponibles.length === 0) {
-            select.innerHTML = '<option value="">No hay médicos disponibles este día</option>';
+          if (disponibles.length === 0) {
+            select.innerHTML =
+              '<option value="">No hay médicos disponibles este día</option>';
             return;
+          }
+
+          select.innerHTML =
+            '<option value="">— Seleccioná médico —</option>' +
+            disponibles
+              .map(
+                (d) =>
+                  `<option value="${d.id_medico}" data-nombre="${d.medicos_cierre_dp.nombre}">${d.medicos_cierre_dp.nombre}</option>`,
+              )
+              .join("");
+        } catch (e) {
+          select.innerHTML = '<option value="">Error al cargar</option>';
+        }
+      }
+
+      async function cargarSlotsmedico() {
+        const select = document.getElementById("nc-medico-select");
+        const idMedico = select.value;
+        const nombreMedico =
+          select.options[select.selectedIndex]?.dataset.nombre || "";
+        const fecha = document.getElementById("nc-fecha").value;
+        const slotsDiv = document.getElementById("nc-slots");
+
+        document.getElementById("nc-medico-id").value = idMedico;
+        document.getElementById("nc-medico-nombre").value = nombreMedico;
+        document.getElementById("nc-hora-seleccionada").value = "";
+
+        if (!idMedico) {
+          slotsDiv.innerHTML =
+            '<span style="color:#999; font-size:0.9em;">Seleccioná un médico.</span>';
+          return;
         }
 
-        select.innerHTML = '<option value="">— Seleccioná médico —</option>' +
-            disponibles.map(d => `<option value="${d.id_medico}" data-nombre="${d.medicos_cierre_dp.nombre}">${d.medicos_cierre_dp.nombre}</option>`).join('');
-    } catch(e) {
-        select.innerHTML = '<option value="">Error al cargar</option>';
-    }
-}
+        slotsDiv.innerHTML =
+          '<span style="color:#999; font-size:0.9em;">Cargando horarios...</span>';
 
-async function cargarSlotsmedico() {
-    const select = document.getElementById('nc-medico-select');
-    const idMedico = select.value;
-    const nombreMedico = select.options[select.selectedIndex]?.dataset.nombre || '';
-    const fecha = document.getElementById('nc-fecha').value;
-    const slotsDiv = document.getElementById('nc-slots');
+        try {
+          const res = await fetch(
+            `/api/slots-medico?id_medico=${idMedico}&fecha=${fecha}`,
+          );
+          const data = await res.json();
+          const slots = data.slots || [];
 
-    document.getElementById('nc-medico-id').value = idMedico;
-    document.getElementById('nc-medico-nombre').value = nombreMedico;
-    document.getElementById('nc-hora-seleccionada').value = '';
-
-    if (!idMedico) {
-        slotsDiv.innerHTML = '<span style="color:#999; font-size:0.9em;">Seleccioná un médico.</span>';
-        return;
-    }
-
-    slotsDiv.innerHTML = '<span style="color:#999; font-size:0.9em;">Cargando horarios...</span>';
-
-    try {
-        const res = await fetch(`/api/slots-medico?id_medico=${idMedico}&fecha=${fecha}`);
-        const data = await res.json();
-        const slots = data.slots || [];
-
-        if (slots.length === 0) {
-            slotsDiv.innerHTML = '<span style="color:#999;">Sin horarios disponibles.</span>';
+          if (slots.length === 0) {
+            slotsDiv.innerHTML =
+              '<span style="color:#999;">Sin horarios disponibles.</span>';
             return;
-        }
+          }
 
-        slotsDiv.innerHTML = slots.map(s => `
+          slotsDiv.innerHTML = slots
+            .map(
+              (s) => `
             <button onclick="seleccionarSlot('${s.hora}')" 
-                ${!s.disponible ? 'disabled' : ''}
-                style="padding:6px 12px; border-radius:5px; border:1px solid ${s.disponible ? '#009A44' : '#ccc'}; 
-                       background:${s.disponible ? 'white' : '#f0f0f0'}; 
-                       color:${s.disponible ? '#009A44' : '#999'}; 
-                       cursor:${s.disponible ? 'pointer' : 'not-allowed'}; font-weight:bold; font-size:0.85em;">
-                ${s.hora.substring(0,5)}${!s.disponible ? ' ✗' : ''}
-            </button>`).join('');
-    } catch(e) {
-        slotsDiv.innerHTML = '<span style="color:red;">Error al cargar horarios.</span>';
-    }
-}
+                ${!s.disponible ? "disabled" : ""}
+                style="padding:6px 12px; border-radius:5px; border:1px solid ${s.disponible ? "#009A44" : "#ccc"}; 
+                       background:${s.disponible ? "white" : "#f0f0f0"}; 
+                       color:${s.disponible ? "#009A44" : "#999"}; 
+                       cursor:${s.disponible ? "pointer" : "not-allowed"}; font-weight:bold; font-size:0.85em;">
+                ${s.hora.substring(0, 5)}${!s.disponible ? " ✗" : ""}
+            </button>`,
+            )
+            .join("");
+        } catch (e) {
+          slotsDiv.innerHTML =
+            '<span style="color:red;">Error al cargar horarios.</span>';
+        }
+      }
 
-function seleccionarSlot(hora) {
-    document.getElementById('nc-hora-seleccionada').value = hora;
-    // Resaltar el slot seleccionado
-    const botones = document.getElementById('nc-slots').querySelectorAll('button');
-    botones.forEach(btn => {
-        const esSeleccionado = btn.textContent.trim().startsWith(hora.substring(0,5));
-        btn.style.background = esSeleccionado ? '#009A44' : 'white';
-        btn.style.color = esSeleccionado ? 'white' : '#009A44';
-    });
-}
+      function seleccionarSlot(hora) {
+        document.getElementById("nc-hora-seleccionada").value = hora;
+        // Resaltar el slot seleccionado
+        const botones = document
+          .getElementById("nc-slots")
+          .querySelectorAll("button");
+        botones.forEach((btn) => {
+          const esSeleccionado = btn.textContent
+            .trim()
+            .startsWith(hora.substring(0, 5));
+          btn.style.background = esSeleccionado ? "#009A44" : "white";
+          btn.style.color = esSeleccionado ? "white" : "#009A44";
+        });
+      }
 
-async function buscarAfiliadoCierre() {
-    const dni = document.getElementById('nc-dni').value.trim();
-    const infoDiv = document.getElementById('nc-afiliado-info');
-    if (!dni) return;
+      async function buscarAfiliadoCierre() {
+        const dni = document.getElementById("nc-dni").value.trim();
+        const infoDiv = document.getElementById("nc-afiliado-info");
+        if (!dni) return;
 
-    infoDiv.innerHTML = '<span style="color:#666;">Buscando...</span>';
-    try {
-        const res = await fetch(`/api/verificar-afiliado/${dni}`);
-        const data = await res.json();
-        if (data.esActivo) {
+        infoDiv.innerHTML = '<span style="color:#666;">Buscando...</span>';
+        try {
+          const res = await fetch(`/api/verificar-afiliado/${dni}`);
+          const data = await res.json();
+          if (data.esActivo) {
             infoDiv.innerHTML = `<span style="color:#009A44; font-weight:bold;">✓ ${data.nombre}</span> <span style="color:#666;">| ${data.edad} años</span>`;
             // Guardar nombre para el turno
-            document.getElementById('nc-dni').dataset.nombre = data.nombre;
-        } else {
-            infoDiv.innerHTML = '<span style="color:#dc3545;">❌ No es afiliado activo en IAPOS.</span>';
+            document.getElementById("nc-dni").dataset.nombre = data.nombre;
+          } else {
+            infoDiv.innerHTML =
+              '<span style="color:#dc3545;">❌ No es afiliado activo en IAPOS.</span>';
+          }
+        } catch (e) {
+          infoDiv.innerHTML =
+            '<span style="color:#dc3545;">Error al verificar.</span>';
         }
-    } catch(e) {
-        infoDiv.innerHTML = '<span style="color:#dc3545;">Error al verificar.</span>';
-    }
-}
+      }
 
-async function guardarNuevoTurnoCierre() {
-    const dni = document.getElementById('nc-dni').value.trim();
-    const nombre = document.getElementById('nc-dni').dataset.nombre || '';
-    const fecha = document.getElementById('nc-fecha').value;
-    const hora = document.getElementById('nc-hora-seleccionada').value;
-    const idMedico = document.getElementById('nc-medico-id').value;
-    const nombreMedico = document.getElementById('nc-medico-nombre').value;
-    const idSede = document.getElementById('nc-sede').value;
-    const obs = document.getElementById('nc-obs').value.trim();
+      async function guardarNuevoTurnoCierre() {
+        const dni = document.getElementById("nc-dni").value.trim();
+        const nombre = document.getElementById("nc-dni").dataset.nombre || "";
+        const fecha = document.getElementById("nc-fecha").value;
+        const hora = document.getElementById("nc-hora-seleccionada").value;
+        const idMedico = document.getElementById("nc-medico-id").value;
+        const nombreMedico = document.getElementById("nc-medico-nombre").value;
+        const idSede = document.getElementById("nc-sede").value;
+        const obs = document.getElementById("nc-obs").value.trim();
 
-    if (!dni) return alert('Ingresá el DNI del afiliado.');
-    if (!fecha) return alert('Seleccioná una fecha.');
-    if (!hora) return alert('Seleccioná un horario.');
-    if (!idMedico) return alert('Seleccioná un médico.');
+        if (!dni) return alert("Ingresá el DNI del afiliado.");
+        if (!fecha) return alert("Seleccioná una fecha.");
+        if (!hora) return alert("Seleccioná un horario.");
+        if (!idMedico) return alert("Seleccioná un médico.");
 
-    try {
-        const res = await fetch('/api/agenda-cierre', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        try {
+          const res = await fetch("/api/agenda-cierre", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                dni,
-                apellido_y_nombre: nombre,
-                fecha,
-                hora,
-                id_medico: idMedico,
-                nombre_medico: nombreMedico,
-                id_sede_dp: parseInt(idSede),
-                observaciones: obs || null,
-                estado: 'AGENDADO'
-            })
-        });
-        const data = await res.json();
-        if (data.status === 'success') {
+              dni,
+              apellido_y_nombre: nombre,
+              fecha,
+              hora,
+              id_medico: idMedico,
+              nombre_medico: nombreMedico,
+              id_sede_dp: parseInt(idSede),
+              observaciones: obs || null,
+              estado: "AGENDADO",
+            }),
+          });
+          const data = await res.json();
+          if (data.status === "success") {
             cerrarModalNuevoTurnoCierre();
-            document.getElementById('cierre-fecha').value = fecha;
+            document.getElementById("cierre-fecha").value = fecha;
             cargarAgendaCierre();
-        } else {
-            alert('Error al guardar: ' + data.message);
+          } else {
+            alert("Error al guardar: " + data.message);
+          }
+        } catch (e) {
+          alert("Error de conexión.");
         }
-    } catch(e) {
-        alert('Error de conexión.');
-    }
-}
+      }
     </script>
-    <div id="modal-nuevo-cierre" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; overflow-y:auto;">
-  <div style="background:white; border-radius:10px; padding:30px; max-width:520px; width:100%; margin:20px auto;">
-    <h3 style="color:#005A9C; margin-top:0;">Agendar Turno de Cierre DP</h3>
+    <div
+      id="modal-nuevo-cierre"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+      "
+    >
+      <div
+        style="
+          background: white;
+          border-radius: 10px;
+          padding: 30px;
+          max-width: 520px;
+          width: 100%;
+          margin: 20px auto;
+        "
+      >
+        <h3 style="color: #005a9c; margin-top: 0">
+          Agendar Turno de Cierre DP
+        </h3>
 
-    <!-- Paso 1: Fecha -->
-    <div style="margin-bottom:16px;">
-      <label style="font-weight:bold; display:block; margin-bottom:4px;">Fecha del turno</label>
-      <input type="date" id="nc-fecha"
-        onchange="cargarMedicosDisponibles()"
-        style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box;">
-    </div>
+        <!-- Paso 1: Fecha -->
+        <div style="margin-bottom: 16px">
+          <label style="font-weight: bold; display: block; margin-bottom: 4px"
+            >Fecha del turno</label
+          >
+          <input
+            type="date"
+            id="nc-fecha"
+            onchange="cargarMedicosDisponibles()"
+            style="
+              width: 100%;
+              padding: 8px;
+              border-radius: 5px;
+              border: 1px solid #ccc;
+              box-sizing: border-box;
+            "
+          />
+        </div>
 
-    <!-- Paso 2: Médico -->
-    <div style="margin-bottom:16px;">
-      <label style="font-weight:bold; display:block; margin-bottom:4px;">Médico disponible</label>
-      <select id="nc-medico-select" onchange="cargarSlotsmedico()"
-        style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box;">
-        <option value="">— Primero seleccioná una fecha —</option>
-      </select>
-    </div>
+        <!-- Paso 2: Médico -->
+        <div style="margin-bottom: 16px">
+          <label style="font-weight: bold; display: block; margin-bottom: 4px"
+            >Médico disponible</label
+          >
+          <select
+            id="nc-medico-select"
+            onchange="cargarSlotsmedico()"
+            style="
+              width: 100%;
+              padding: 8px;
+              border-radius: 5px;
+              border: 1px solid #ccc;
+              box-sizing: border-box;
+            "
+          >
+            <option value="">— Primero seleccioná una fecha —</option>
+          </select>
+        </div>
 
-    <!-- Paso 3: Hora -->
-    <div style="margin-bottom:16px;">
-      <label style="font-weight:bold; display:block; margin-bottom:4px;">Horario disponible</label>
-      <div id="nc-slots" style="display:flex; flex-wrap:wrap; gap:8px; min-height:40px;">
-        <span style="color:#999; font-size:0.9em;">Seleccioná médico y fecha primero.</span>
-      </div>
-      <input type="hidden" id="nc-hora-seleccionada">
-    </div>
+        <!-- Paso 3: Hora -->
+        <div style="margin-bottom: 16px">
+          <label style="font-weight: bold; display: block; margin-bottom: 4px"
+            >Horario disponible</label
+          >
+          <div
+            id="nc-slots"
+            style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px"
+          >
+            <span style="color: #999; font-size: 0.9em"
+              >Seleccioná médico y fecha primero.</span
+            >
+          </div>
+          <input type="hidden" id="nc-hora-seleccionada" />
+        </div>
 
-    <!-- Paso 4: DNI -->
-    <div style="margin-bottom:16px;">
-      <label style="font-weight:bold; display:block; margin-bottom:4px;">DNI del afiliado</label>
-      <div style="display:flex; gap:8px;">
-        <input type="text" id="nc-dni" maxlength="9" placeholder="Ingresá el DNI..."
-          style="flex:1; padding:8px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box;">
-        <button onclick="buscarAfiliadoCierre()"
-          style="background:#005A9C; color:white; border:none; padding:8px 14px; border-radius:5px; cursor:pointer; font-weight:bold;">
-          Buscar
-        </button>
-      </div>
-      <div id="nc-afiliado-info" style="margin-top:8px; font-size:0.9em; color:#333;"></div>
-    </div>
+        <!-- Paso 4: DNI -->
+        <div style="margin-bottom: 16px">
+          <label style="font-weight: bold; display: block; margin-bottom: 4px"
+            >DNI del afiliado</label
+          >
+          <div style="display: flex; gap: 8px">
+            <input
+              type="text"
+              id="nc-dni"
+              maxlength="9"
+              placeholder="Ingresá el DNI..."
+              style="
+                flex: 1;
+                padding: 8px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
+              "
+            />
+            <button
+              onclick="buscarAfiliadoCierre()"
+              style="
+                background: #005a9c;
+                color: white;
+                border: none;
+                padding: 8px 14px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+              "
+            >
+              Buscar
+            </button>
+          </div>
+          <div
+            id="nc-afiliado-info"
+            style="margin-top: 8px; font-size: 0.9em; color: #333"
+          ></div>
+        </div>
 
-    <!-- Sede (fija, oculta) -->
-    <input type="hidden" id="nc-sede">
-    <input type="hidden" id="nc-medico-id">
-    <input type="hidden" id="nc-medico-nombre">
+        <!-- Sede (fija, oculta) -->
+        <input type="hidden" id="nc-sede" />
+        <input type="hidden" id="nc-medico-id" />
+        <input type="hidden" id="nc-medico-nombre" />
 
-    <!-- Observaciones -->
-    <div style="margin-bottom:16px;">
-      <label style="font-weight:bold; display:block; margin-bottom:4px;">Observaciones (opcional)</label>
-      <textarea id="nc-obs" rows="2"
-        style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box; resize:vertical;"></textarea>
-    </div>
+        <!-- Observaciones -->
+        <div style="margin-bottom: 16px">
+          <label style="font-weight: bold; display: block; margin-bottom: 4px"
+            >Observaciones (opcional)</label
+          >
+          <textarea
+            id="nc-obs"
+            rows="2"
+            style="
+              width: 100%;
+              padding: 8px;
+              border-radius: 5px;
+              border: 1px solid #ccc;
+              box-sizing: border-box;
+              resize: vertical;
+            "
+          ></textarea>
+        </div>
 
-    <div style="display:flex; gap:10px; justify-content:flex-end;">
-      <button onclick="cerrarModalNuevoTurnoCierre()" class="action-button btn-gray">Cancelar</button>
-      <button onclick="guardarNuevoTurnoCierre()" class="action-button btn-green">Guardar turno</button>
-    </div>
-  </div>
-</div>
-          style="
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: flex-end;
-          "
-        >
+        <div style="display: flex; gap: 10px; justify-content: flex-end">
           <button
             onclick="cerrarModalNuevoTurnoCierre()"
             class="action-button btn-gray"
