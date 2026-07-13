@@ -459,75 +459,90 @@
       function cerrarConfigMedicos() {
         document.getElementById("modal-config-medicos").style.display = "none";
       }
+async function cargarMedicosConfig() {
+    const idSede = window.dpPayload?.id_sede_dp || '';
+    const lista = document.getElementById('lista-medicos-config');
+    lista.innerHTML = '<p style="color:#999;">Cargando...</p>';
+    try {
+        // Traer médicos ya en la agenda de esta sede
+        const res = await fetch(`/api/medicos-cierre/${idSede}`);
+        const data = await res.json();
+        const medicos = data.medicos || [];
 
-      async function cargarMedicosConfig() {
-        const idSede = window.dpPayload?.id_sede_dp || "";
-        const lista = document.getElementById("lista-medicos-config");
-        lista.innerHTML = '<p style="color:#999;">Cargando...</p>';
-        try {
-          const res = await fetch(`/api/medicos-cierre/${idSede}`);
-          const data = await res.json();
-          const medicos = data.medicos || [];
-          if (medicos.length === 0) {
-            lista.innerHTML =
-              '<p style="color:#999; font-style:italic;">No hay médicos cargados para esta sede.</p>';
-            return;
-          }
-          lista.innerHTML = medicos
-            .map(
-              (m) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #ddd; border-radius:6px; margin-bottom:8px; background:white;">
-                <div>
-                    <strong>${m.nombre}</strong>
-                    <span style="color:#666; font-size:0.85em; margin-left:8px;">${m.especialidad || ""}</span>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <button onclick="verDisponibilidad(${m.id}, '${m.nombre}')"
-                        style="background:#005A9C; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.85em;">
-                        🗓 Agenda
-                    </button>
-                    <button onclick="desactivarMedico(${m.id})"
-                        style="background:#dc3545; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.85em;">
-                        Desactivar
-                    </button>
-                </div>
-            </div>`,
-            )
-            .join("");
-        } catch (e) {
-          lista.innerHTML = '<p style="color:red;">Error al cargar.</p>';
+        if (medicos.length === 0) {
+            lista.innerHTML = '<p style="color:#999; font-style:italic;">No hay médicos en la agenda de esta sede.</p>';
+        } else {
+            lista.innerHTML = medicos.map(m => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #ddd; border-radius:6px; margin-bottom:8px; background:white;">
+                    <div>
+                        <strong>${m.nombre}</strong>
+                        <span style="color:#666; font-size:0.85em; margin-left:8px;">${m.especialidad || ''}</span>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="verDisponibilidad(${m.id}, '${m.nombre}')"
+                            style="background:#005A9C; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.85em;">
+                            🗓 Agenda
+                        </button>
+                        <button onclick="desactivarMedico(${m.id})"
+                            style="background:#dc3545; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.85em;">
+                            Desactivar
+                        </button>
+                    </div>
+                </div>`).join('');
         }
-      }
 
-      async function agregarMedico() {
-        const nombre = document.getElementById("cm-nombre").value.trim();
-        const especialidad = document
-          .getElementById("cm-especialidad")
-          .value.trim();
-        const idSede = window.dpPayload?.id_sede_dp || "";
-        if (!nombre) return alert("Ingresá el nombre del médico.");
-        try {
-          const res = await fetch("/api/medicos-cierre", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+        // Cargar dropdown con médicos internos habilitados de esta sede
+        const resProfesionales = await fetch(`/api/medicos-internos?id_sede_dp=${idSede}`);
+        const dataProfesionales = await resProfesionales.json();
+        const profesionales = dataProfesionales.medicos || [];
+        
+        // Filtrar los que ya están en la agenda
+        const idsYaAgregados = new Set(medicos.map(m => m.id_profesional).filter(Boolean));
+        const disponibles = profesionales.filter(p => !idsYaAgregados.has(p.id));
+
+        const select = document.getElementById('cm-medico-select');
+        if (disponibles.length === 0) {
+            select.innerHTML = '<option value="">Todos los médicos ya están en la agenda</option>';
+        } else {
+            select.innerHTML = '<option value="">— Seleccioná un médico —</option>' +
+                disponibles.map(p => `<option value="${p.id}" data-nombre="${p.nombre} ${p.apellido}" data-especialidad="${p.especialidad || ''}">${p.apellido}, ${p.nombre}</option>`).join('');
+        }
+
+    } catch(e) {
+        lista.innerHTML = '<p style="color:red;">Error al cargar.</p>';
+    }
+}
+
+async function agregarMedicoDesdeSelect() {
+    const select = document.getElementById('cm-medico-select');
+    const idProfesional = select.value;
+    const nombre = select.options[select.selectedIndex]?.dataset.nombre || '';
+    const especialidad = select.options[select.selectedIndex]?.dataset.especialidad || '';
+    const idSede = window.dpPayload?.id_sede_dp || '';
+
+    if (!idProfesional) return alert('Seleccioná un médico.');
+
+    try {
+        const res = await fetch('/api/medicos-cierre', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              nombre,
-              especialidad,
-              id_sede_dp: parseInt(idSede),
-            }),
-          });
-          const data = await res.json();
-          if (data.status === "success") {
-            document.getElementById("cm-nombre").value = "";
-            document.getElementById("cm-especialidad").value = "";
+                nombre,
+                especialidad,
+                id_sede_dp: parseInt(idSede),
+                id_profesional: idProfesional
+            })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
             cargarMedicosConfig();
-          } else {
-            alert("Error: " + data.message);
-          }
-        } catch (e) {
-          alert("Error de conexión.");
+        } else {
+            alert('Error: ' + data.message);
         }
-      }
+    } catch(e) {
+        alert('Error de conexión.');
+    }
+}
 
       async function desactivarMedico(id) {
         if (!confirm("¿Desactivar este médico? No aparecerá más en la agenda."))
@@ -1634,58 +1649,18 @@
             padding: 20px;
           "
         >
-          <h4 style="color: #005a9c; margin-top: 0">Agregar médico</h4>
-          <div style="display: flex; gap: 10px; margin-bottom: 12px">
-            <div style="flex: 2">
-              <label
-                style="font-weight: bold; display: block; margin-bottom: 4px"
-                >Nombre</label
-              >
-              <input
-                type="text"
-                id="cm-nombre"
-                placeholder="Dr. Apellido Nombre"
-                style="
-                  width: 100%;
-                  padding: 8px;
-                  border-radius: 5px;
-                  border: 1px solid #ccc;
-                  box-sizing: border-box;
-                "
-              />
-            </div>
-            <div style="flex: 1">
-              <label
-                style="font-weight: bold; display: block; margin-bottom: 4px"
-                >Especialidad</label
-              >
-              <input
-                type="text"
-                id="cm-especialidad"
-                placeholder="Ej: Clínica"
-                style="
-                  width: 100%;
-                  padding: 8px;
-                  border-radius: 5px;
-                  border: 1px solid #ccc;
-                  box-sizing: border-box;
-                "
-              />
-            </div>
+        <div style="background:#f9f9f9; border:1px solid #ddd; border-radius:8px; padding:20px;">
+          <h4 style="color:#005A9C; margin-top:0;">Agregar médico a la agenda</h4>
+          <div style="margin-bottom:12px;">
+            <label style="font-weight:bold; display:block; margin-bottom:4px;">Médico interno habilitado</label>
+            <select id="cm-medico-select"
+              style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;">
+              <option value="">Cargando médicos...</option>
+            </select>
           </div>
-          <button
-            onclick="agregarMedico()"
-            style="
-              background: #009a44;
-              color: white;
-              border: none;
-              padding: 8px 20px;
-              border-radius: 5px;
-              cursor: pointer;
-              font-weight: bold;
-            "
-          >
-            + Agregar médico
+          <button onclick="agregarMedicoDesdeSelect()"
+            style="background:#009A44; color:white; border:none; padding:8px 20px; border-radius:5px; cursor:pointer; font-weight:bold;">
+            + Agregar a la agenda
           </button>
         </div>
 

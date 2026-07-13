@@ -505,6 +505,23 @@ app.delete("/api/disponibilidad-medico/:id", async (req, res) => {
   }
 });
 
+app.get('/api/medicos-internos', async (req, res) => {
+    const { id_sede_dp } = req.query;
+    try {
+        let query = supabase
+            .from('profesionales')
+            .select('id, nombre, apellido, especialidad')
+            .eq('puede_cerrar_interno', true)
+            .eq('activo', true);
+        if (id_sede_dp) query = query.eq('id_sede_dp', parseInt(id_sede_dp));
+        const { data, error } = await query.order('apellido');
+        if (error) throw error;
+        res.json({ medicos: data || [] });
+    } catch(e) {
+        res.status(500).json({ medicos: [] });
+    }
+});
+
 // =========================================================
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
