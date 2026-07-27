@@ -1336,9 +1336,9 @@ async function agregarMedicoDesdeSelect() {
             <button onclick="seleccionarSlot('${s.hora}')" 
                 ${!s.disponible ? "disabled" : ""}
                 style="padding:6px 12px; border-radius:5px; border:1px solid ${s.disponible ? "#009A44" : "#ccc"}; 
-                       background:${s.disponible ? "white" : "#f0f0f0"}; 
-                       color:${s.disponible ? "#009A44" : "#999"}; 
-                       cursor:${s.disponible ? "pointer" : "not-allowed"}; font-weight:bold; font-size:0.85em;">
+                      background:${s.disponible ? "white" : "#f0f0f0"}; 
+                      color:${s.disponible ? "#009A44" : "#999"}; 
+                      cursor:${s.disponible ? "pointer" : "not-allowed"}; font-weight:bold; font-size:0.85em;">
                 ${s.hora.substring(0, 5)}${!s.disponible ? " ✗" : ""}
             </button>`,
             )

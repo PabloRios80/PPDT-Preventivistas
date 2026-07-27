@@ -388,6 +388,13 @@ app.get("/api/slots-medico", async (req, res) => {
       .eq("id_medico", id_medico)
       .eq("fecha", fecha);
 
+    // Calcular si la fecha consultada es HOY (hora Argentina, UTC-3)
+    const ahoraArg = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const hoyArgStr = ahoraArg.toISOString().split("T")[0];
+    const esHoy = fecha === hoyArgStr;
+    const minutosActuales =
+      ahoraArg.getUTCHours() * 60 + ahoraArg.getUTCMinutes();
+
     const slots = [];
 
     // Slots del patrón habitual
@@ -402,7 +409,8 @@ app.get("/api/slots-medico", async (req, res) => {
           .padStart(2, "0");
         const m = (actual % 60).toString().padStart(2, "0");
         const horaStr = `${h}:${m}:00`;
-        if (!horasBloqueadas.has(horaStr)) {
+        const yaPaso = esHoy && actual < minutosActuales;
+        if (!horasBloqueadas.has(horaStr) && !yaPaso) {
           slots.push({
             hora: horaStr,
             disponible: !horasOcupadas.has(horaStr),
@@ -415,7 +423,10 @@ app.get("/api/slots-medico", async (req, res) => {
 
     // Slots extra puntuales
     (extras || []).forEach((e) => {
-      if (!slots.find((s) => s.hora === e.hora)) {
+      const [hE, mE] = e.hora.split(":").map(Number);
+      const minutosExtra = hE * 60 + mE;
+      const yaPaso = esHoy && minutosExtra < minutosActuales;
+      if (!yaPaso && !slots.find((s) => s.hora === e.hora)) {
         slots.push({
           hora: e.hora,
           disponible: !horasOcupadas.has(e.hora),
