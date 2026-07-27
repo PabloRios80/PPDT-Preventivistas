@@ -343,9 +343,20 @@ app.get("/api/medicos-disponibles", async (req, res) => {
 app.get("/api/slots-medico", async (req, res) => {
   const { id_medico, fecha } = req.query;
   try {
+    // 1. ¿Está el día completo bloqueado?
+    const { data: diaBloqueado } = await supabase
+      .from("dias_bloqueados_medico_cierre")
+      .select("id")
+      .eq("id_medico", id_medico)
+      .eq("fecha", fecha)
+      .maybeSingle();
+
+    if (diaBloqueado) {
+      return res.json({ status: "success", slots: [], diaBloqueado: true });
+    }
+
     const diaSemana = new Date(fecha + "T12:00:00").getDay();
 
-    // Traer disponibilidad
     const { data: disp } = await supabase
       .from("disponibilidad_medico_cierre")
       .select("*")
@@ -354,37 +365,66 @@ app.get("/api/slots-medico", async (req, res) => {
       .eq("activo", true)
       .single();
 
-    if (!disp) return res.json({ status: "success", slots: [] });
-
-    // Traer turnos ya ocupados
     const { data: ocupados } = await supabase
       .from("agenda_cierre_dp")
       .select("hora")
       .eq("id_medico", id_medico)
       .eq("fecha", fecha)
       .neq("estado", "CANCELADO");
-
     const horasOcupadas = new Set((ocupados || []).map((t) => t.hora));
 
-    // Generar slots
-    const slots = [];
-    const [hIni, mIni] = disp.hora_inicio.split(":").map(Number);
-    const [hFin, mFin] = disp.hora_fin.split(":").map(Number);
-    let actual = hIni * 60 + mIni;
-    const fin = hFin * 60 + mFin;
+    const { data: bloqueadosPuntual } = await supabase
+      .from("slots_bloqueados_medico_cierre")
+      .select("hora")
+      .eq("id_medico", id_medico)
+      .eq("fecha", fecha);
+    const horasBloqueadas = new Set(
+      (bloqueadosPuntual || []).map((b) => b.hora),
+    );
 
-    while (actual < fin) {
-      const h = Math.floor(actual / 60)
-        .toString()
-        .padStart(2, "0");
-      const m = (actual % 60).toString().padStart(2, "0");
-      const horaStr = `${h}:${m}:00`;
-      slots.push({
-        hora: horaStr,
-        disponible: !horasOcupadas.has(horaStr),
-      });
-      actual += disp.duracion_minutos;
+    const { data: extras } = await supabase
+      .from("slots_extra_medico_cierre")
+      .select("hora")
+      .eq("id_medico", id_medico)
+      .eq("fecha", fecha);
+
+    const slots = [];
+
+    // Slots del patrón habitual
+    if (disp) {
+      const [hIni, mIni] = disp.hora_inicio.split(":").map(Number);
+      const [hFin, mFin] = disp.hora_fin.split(":").map(Number);
+      let actual = hIni * 60 + mIni;
+      const fin = hFin * 60 + mFin;
+      while (actual < fin) {
+        const h = Math.floor(actual / 60)
+          .toString()
+          .padStart(2, "0");
+        const m = (actual % 60).toString().padStart(2, "0");
+        const horaStr = `${h}:${m}:00`;
+        if (!horasBloqueadas.has(horaStr)) {
+          slots.push({
+            hora: horaStr,
+            disponible: !horasOcupadas.has(horaStr),
+            extra: false,
+          });
+        }
+        actual += disp.duracion_minutos;
+      }
     }
+
+    // Slots extra puntuales
+    (extras || []).forEach((e) => {
+      if (!slots.find((s) => s.hora === e.hora)) {
+        slots.push({
+          hora: e.hora,
+          disponible: !horasOcupadas.has(e.hora),
+          extra: true,
+        });
+      }
+    });
+
+    slots.sort((a, b) => a.hora.localeCompare(b.hora));
 
     res.json({ status: "success", slots });
   } catch (e) {
@@ -505,23 +545,127 @@ app.delete("/api/disponibilidad-medico/:id", async (req, res) => {
   }
 });
 
-app.get('/api/medicos-internos', async (req, res) => {
-    const { id_sede_dp } = req.query;
-    try {
-        let query = supabase
-            .from('profesionales')
-            .select('id, nombre, apellido, especialidad')
-            .eq('puede_cerrar_interno', true)
-            .eq('activo', true);
-        if (id_sede_dp) query = query.eq('id_sede_dp', parseInt(id_sede_dp));
-        const { data, error } = await query.order('apellido');
-        if (error) throw error;
-        res.json({ medicos: data || [] });
-    } catch(e) {
-        res.status(500).json({ medicos: [] });
-    }
+app.get("/api/medicos-internos", async (req, res) => {
+  const { id_sede_dp } = req.query;
+  try {
+    let query = supabase
+      .from("profesionales")
+      .select("id, nombre, apellido, especialidad")
+      .eq("puede_cerrar_interno", true)
+      .eq("activo", true);
+    if (id_sede_dp) query = query.eq("id_sede_dp", parseInt(id_sede_dp));
+    const { data, error } = await query.order("apellido");
+    if (error) throw error;
+    res.json({ medicos: data || [] });
+  } catch (e) {
+    res.status(500).json({ medicos: [] });
+  }
+});
+// Agregar turno extra puntual
+app.post("/api/slots-extra-medico", async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("slots_extra_medico_cierre")
+      .insert(req.body);
+    if (error) throw error;
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
 });
 
+// Bloquear un horario puntual dentro de un día habitual
+app.post("/api/slots-bloqueados-medico", async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("slots_bloqueados_medico_cierre")
+      .insert(req.body);
+    if (error) throw error;
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Bloquear día completo (con aviso de turnos existentes, sin impedir)
+app.post("/api/dias-bloqueados-medico", async (req, res) => {
+  const { id_medico, fecha, motivo } = req.body;
+  try {
+    // Chequear turnos existentes ese día (solo para avisar)
+    const { data: turnosExistentes } = await supabase
+      .from("agenda_cierre_dp")
+      .select("id, dni, apellido_y_nombre, hora")
+      .eq("id_medico", id_medico)
+      .eq("fecha", fecha)
+      .neq("estado", "CANCELADO");
+
+    const { error } = await supabase
+      .from("dias_bloqueados_medico_cierre")
+      .insert({ id_medico, fecha, motivo });
+    if (error) throw error;
+
+    res.json({
+      status: "success",
+      turnosAfectados: turnosExistentes || [],
+    });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Listar excepciones de un médico (para mostrarlas en el modal)
+app.get("/api/excepciones-medico/:id_medico", async (req, res) => {
+  try {
+    const [extras, bloqueados, dias] = await Promise.all([
+      supabase
+        .from("slots_extra_medico_cierre")
+        .select("*")
+        .eq("id_medico", req.params.id_medico)
+        .order("fecha"),
+      supabase
+        .from("slots_bloqueados_medico_cierre")
+        .select("*")
+        .eq("id_medico", req.params.id_medico)
+        .order("fecha"),
+      supabase
+        .from("dias_bloqueados_medico_cierre")
+        .select("*")
+        .eq("id_medico", req.params.id_medico)
+        .order("fecha"),
+    ]);
+    res.json({
+      status: "success",
+      extras: extras.data || [],
+      bloqueados: bloqueados.data || [],
+      diasBloqueados: dias.data || [],
+    });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Eliminar una excepción puntual
+app.delete("/api/slots-extra-medico/:id", async (req, res) => {
+  await supabase
+    .from("slots_extra_medico_cierre")
+    .delete()
+    .eq("id", req.params.id);
+  res.json({ status: "success" });
+});
+app.delete("/api/slots-bloqueados-medico/:id", async (req, res) => {
+  await supabase
+    .from("slots_bloqueados_medico_cierre")
+    .delete()
+    .eq("id", req.params.id);
+  res.json({ status: "success" });
+});
+app.delete("/api/dias-bloqueados-medico/:id", async (req, res) => {
+  await supabase
+    .from("dias_bloqueados_medico_cierre")
+    .delete()
+    .eq("id", req.params.id);
+  res.json({ status: "success" });
+});
 // =========================================================
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
