@@ -561,6 +561,7 @@ async function agregarMedicoDesdeSelect() {
         document.getElementById("config-disponibilidad").style.display =
           "block";
         await cargarDisponibilidadConfig(idMedico);
+        await cargarExcepcionesConfig(idMedico);
       }
 
       async function cargarDisponibilidadConfig(idMedico) {
@@ -1391,6 +1392,145 @@ async function agregarMedicoDesdeSelect() {
         const sinModalidad = ["Telereceta", "Cierre DP - Oficio"];
         wrapper.style.display = sinModalidad.includes(tipo) || !tipo ? "none" : "block";
       }
+      async function cargarExcepcionesConfig(idMedico) {
+  const cont = document.getElementById("lista-excepciones-config");
+  cont.innerHTML = '<p style="color:#999;">Cargando excepciones...</p>';
+  try {
+    const res = await fetch(`/api/excepciones-medico/${idMedico}`);
+    const data = await res.json();
+
+    let html = "";
+
+    if (data.extras && data.extras.length > 0) {
+      html += `<p style="font-weight:bold; color:#009a44; margin-top:12px;">Turnos extra agregados</p>`;
+      data.extras.forEach((e) => {
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:#e6ffed; border-radius:5px; margin-bottom:6px;">
+          <span>${e.fecha} — ${e.hora.substring(0, 5)}</span>
+          <button onclick="eliminarSlotExtra(${e.id})" style="background:#dc3545; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8em;">Quitar</button>
+        </div>`;
+      });
+    }
+
+    if (data.bloqueados && data.bloqueados.length > 0) {
+      html += `<p style="font-weight:bold; color:#dc3545; margin-top:12px;">Horarios bloqueados</p>`;
+      data.bloqueados.forEach((b) => {
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:#fdecea; border-radius:5px; margin-bottom:6px;">
+          <span>${b.fecha} — ${b.hora.substring(0, 5)}</span>
+          <button onclick="eliminarSlotBloqueado(${b.id})" style="background:#6c757d; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8em;">Desbloquear</button>
+        </div>`;
+      });
+    }
+
+    if (data.diasBloqueados && data.diasBloqueados.length > 0) {
+      html += `<p style="font-weight:bold; color:#dc3545; margin-top:12px;">Días bloqueados completos</p>`;
+      data.diasBloqueados.forEach((d) => {
+        html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:#fdecea; border-radius:5px; margin-bottom:6px;">
+          <span>${d.fecha}${d.motivo ? " — " + d.motivo : ""}</span>
+          <button onclick="eliminarDiaBloqueado(${d.id})" style="background:#6c757d; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8em;">Desbloquear</button>
+        </div>`;
+      });
+    }
+
+    cont.innerHTML = html || '<p style="color:#999; font-style:italic;">Sin excepciones cargadas.</p>';
+  } catch (e) {
+    cont.innerHTML = '<p style="color:red;">Error al cargar excepciones.</p>';
+  }
+}
+
+async function agregarSlotExtra() {
+  const fecha = document.getElementById("ex-extra-fecha").value;
+  const hora = document.getElementById("ex-extra-hora").value;
+  if (!fecha || !hora) return alert("Completá fecha y hora.");
+  try {
+    const res = await fetch("/api/slots-extra-medico", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_medico: medicoConfigActual, fecha, hora: hora + ":00" }),
+    });
+    const data = await res.json();
+    if (data.status === "success") {
+      document.getElementById("ex-extra-fecha").value = "";
+      document.getElementById("ex-extra-hora").value = "";
+      cargarExcepcionesConfig(medicoConfigActual);
+    } else {
+      alert("Error: " + data.message);
+    }
+  } catch (e) {
+    alert("Error de conexión.");
+  }
+}
+
+async function agregarSlotBloqueado() {
+  const fecha = document.getElementById("ex-bloq-fecha").value;
+  const hora = document.getElementById("ex-bloq-hora").value;
+  if (!fecha || !hora) return alert("Completá fecha y hora.");
+  try {
+    const res = await fetch("/api/slots-bloqueados-medico", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_medico: medicoConfigActual, fecha, hora: hora + ":00" }),
+    });
+    const data = await res.json();
+    if (data.status === "success") {
+      document.getElementById("ex-bloq-fecha").value = "";
+      document.getElementById("ex-bloq-hora").value = "";
+      cargarExcepcionesConfig(medicoConfigActual);
+    } else {
+      alert("Error: " + data.message);
+    }
+  } catch (e) {
+    alert("Error de conexión.");
+  }
+}
+
+async function bloquearDiaCompleto() {
+  const fecha = document.getElementById("ex-dia-fecha").value;
+  const motivo = document.getElementById("ex-dia-motivo").value.trim();
+  if (!fecha) return alert("Seleccioná una fecha.");
+  try {
+    const res = await fetch("/api/dias-bloqueados-medico", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_medico: medicoConfigActual, fecha, motivo: motivo || null }),
+    });
+    const data = await res.json();
+    if (data.status === "success") {
+      if (data.turnosAfectados && data.turnosAfectados.length > 0) {
+        const lista = data.turnosAfectados
+          .map((t) => `• ${t.apellido_y_nombre || t.dni} — ${t.hora.substring(0, 5)}`)
+          .join("\n");
+        alert(
+          `⚠️ Día bloqueado, pero ya había ${data.turnosAfectados.length} turno(s) agendado(s) ese día:\n\n${lista}\n\nContactá a estos pacientes para reprogramar.`,
+        );
+      }
+      document.getElementById("ex-dia-fecha").value = "";
+      document.getElementById("ex-dia-motivo").value = "";
+      cargarExcepcionesConfig(medicoConfigActual);
+    } else {
+      alert("Error: " + data.message);
+    }
+  } catch (e) {
+    alert("Error de conexión.");
+  }
+}
+
+async function eliminarSlotExtra(id) {
+  if (!confirm("¿Quitar este turno extra?")) return;
+  await fetch(`/api/slots-extra-medico/${id}`, { method: "DELETE" });
+  cargarExcepcionesConfig(medicoConfigActual);
+}
+
+async function eliminarSlotBloqueado(id) {
+  if (!confirm("¿Desbloquear este horario?")) return;
+  await fetch(`/api/slots-bloqueados-medico/${id}`, { method: "DELETE" });
+  cargarExcepcionesConfig(medicoConfigActual);
+}
+
+async function eliminarDiaBloqueado(id) {
+  if (!confirm("¿Desbloquear este día?")) return;
+  await fetch(`/api/dias-bloqueados-medico/${id}`, { method: "DELETE" });
+  cargarExcepcionesConfig(medicoConfigActual);
+}
 
       async function guardarNuevoTurnoCierre() {
         const dni = document.getElementById("nc-dni").value.trim();
@@ -1819,6 +1959,67 @@ async function agregarMedicoDesdeSelect() {
           >
             + Agregar horario
           </button>
+          <!-- EXCEPCIONES PUNTUALES -->
+<div style="margin-top: 24px; border-top: 2px solid #ddd; padding-top: 16px;">
+  <h4 style="color: #005a9c; margin-top: 0;">Excepciones puntuales (por fecha)</h4>
+
+  <!-- Agregar turno extra -->
+  <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+    <p style="font-weight: bold; margin-bottom: 8px; color: #009a44;">+ Agregar turno extra un día puntual</p>
+    <div style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap;">
+      <div>
+        <label style="font-size: 0.85em; display: block; margin-bottom: 4px;">Fecha</label>
+        <input type="date" id="ex-extra-fecha" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;" />
+      </div>
+      <div>
+        <label style="font-size: 0.85em; display: block; margin-bottom: 4px;">Hora</label>
+        <input type="time" id="ex-extra-hora" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;" />
+      </div>
+      <button onclick="agregarSlotExtra()" style="background: #009a44; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+        Agregar
+      </button>
+    </div>
+  </div>
+
+  <!-- Bloquear horario puntual -->
+  <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+    <p style="font-weight: bold; margin-bottom: 8px; color: #dc3545;">✕ Bloquear un horario puntual</p>
+    <div style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap;">
+      <div>
+        <label style="font-size: 0.85em; display: block; margin-bottom: 4px;">Fecha</label>
+        <input type="date" id="ex-bloq-fecha" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;" />
+      </div>
+      <div>
+        <label style="font-size: 0.85em; display: block; margin-bottom: 4px;">Hora</label>
+        <input type="time" id="ex-bloq-hora" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;" />
+      </div>
+      <button onclick="agregarSlotBloqueado()" style="background: #dc3545; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+        Bloquear
+      </button>
+    </div>
+  </div>
+
+  <!-- Bloquear día completo -->
+  <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+    <p style="font-weight: bold; margin-bottom: 8px; color: #dc3545;">🚫 Bloquear día completo (vacaciones, ausencia)</p>
+    <div style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap;">
+      <div>
+        <label style="font-size: 0.85em; display: block; margin-bottom: 4px;">Fecha</label>
+        <input type="date" id="ex-dia-fecha" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;" />
+      </div>
+      <div style="flex: 1; min-width: 150px;">
+        <label style="font-size: 0.85em; display: block; margin-bottom: 4px;">Motivo (opcional)</label>
+        <input type="text" id="ex-dia-motivo" placeholder="Ej: Vacaciones" style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box;" />
+      </div>
+      <button onclick="bloquearDiaCompleto()" style="background: #dc3545; color: white; border: none; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+        Bloquear día
+      </button>
+    </div>
+  </div>
+
+  <!-- Listados -->
+  <div id="lista-excepciones-config"></div>
+</div>
         </div>
       </div>
     </div>
