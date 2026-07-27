@@ -1245,6 +1245,8 @@ async function agregarMedicoDesdeSelect() {
         document.getElementById("nc-dni").value = "";
         document.getElementById("nc-afiliado-info").innerHTML = "";
         document.getElementById("nc-obs").value = "";
+        document.getElementById("nc-tipo-turno").value = ""; 
+        document.getElementById("nc-modalidad-wrapper").style.display = "none";
         document.getElementById("nc-medico-id").value = "";
         document.getElementById("nc-medico-nombre").value = "";
         document.getElementById("modal-nuevo-cierre").style.display = "flex";
@@ -1383,6 +1385,12 @@ async function agregarMedicoDesdeSelect() {
             '<span style="color:#dc3545;">Error al verificar.</span>';
         }
       }
+      function actualizarModalidadVisible() {
+        const tipo = document.getElementById("nc-tipo-turno").value;
+        const wrapper = document.getElementById("nc-modalidad-wrapper");
+        const sinModalidad = ["Telereceta", "Cierre DP - Oficio"];
+        wrapper.style.display = sinModalidad.includes(tipo) || !tipo ? "none" : "block";
+      }
 
       async function guardarNuevoTurnoCierre() {
         const dni = document.getElementById("nc-dni").value.trim();
@@ -1393,11 +1401,16 @@ async function agregarMedicoDesdeSelect() {
         const nombreMedico = document.getElementById("nc-medico-nombre").value;
         const idSede = document.getElementById("nc-sede").value;
         const obs = document.getElementById("nc-obs").value.trim();
-
+        const tipoTurno = document.getElementById("nc-tipo-turno").value;           // ← nuevo
+        const sinModalidad = ["Telereceta", "Cierre DP - Oficio"];                  // ← nuevo
+        const modalidad = sinModalidad.includes(tipoTurno)                          // ← nuevo
+        ? null
+        : document.getElementById("nc-modalidad").value;
         if (!dni) return alert("Ingresá el DNI del afiliado.");
         if (!fecha) return alert("Seleccioná una fecha.");
         if (!hora) return alert("Seleccioná un horario.");
         if (!idMedico) return alert("Seleccioná un médico.");
+        if (!tipoTurno) return alert("Seleccioná el tipo de turno."); 
 
         try {
           const res = await fetch("/api/agenda-cierre", {
@@ -1413,6 +1426,8 @@ async function agregarMedicoDesdeSelect() {
               id_sede_dp: parseInt(idSede),
               observaciones: obs || null,
               estado: "AGENDADO",
+              tipo_turno: tipoTurno,      // ← nuevo
+              modalidad: modalidad,
             }),
           });
           const data = await res.json();
@@ -1549,7 +1564,33 @@ async function agregarMedicoDesdeSelect() {
             style="margin-top: 8px; font-size: 0.9em; color: #333"
           ></div>
         </div>
+        <!-- Paso 5: Tipo de turno -->
+        <div style="margin-bottom: 16px">
+  <label style="font-weight: bold; display: block; margin-bottom: 4px">Tipo de turno</label>
+  <select
+    id="nc-tipo-turno"
+    onchange="actualizarModalidadVisible()"
+    style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;"
+  >
+    <option value="">— Seleccioná tipo —</option>
+    <option value="Cierre DP">Cierre DP</option>
+    <option value="Seguimiento">Seguimiento</option>
+    <option value="Extramodulo">Extramódulo</option>
+    <option value="Telereceta">Telereceta</option>
+    <option value="Cierre DP - Oficio">Cierre DP - Oficio</option>
+  </select>
+</div>
 
+<div id="nc-modalidad-wrapper" style="margin-bottom: 16px; display: none;">
+  <label style="font-weight: bold; display: block; margin-bottom: 4px">Modalidad</label>
+  <select
+    id="nc-modalidad"
+    style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;"
+  >
+    <option value="Presencial">Presencial</option>
+    <option value="Videoconsulta">Videoconsulta</option>
+  </select>
+</div>
         <!-- Sede (fija, oculta) -->
         <input type="hidden" id="nc-sede" />
         <input type="hidden" id="nc-medico-id" />
