@@ -1550,7 +1550,7 @@ async function eliminarDiaBloqueado(id) {
         // Telereceta es solo un aviso — no ocupa franja horaria.
         if (tipoTurno === "Telereceta") {
           try {
-            const res = await fetch("/api/telereceta/crear", {
+            const res = await fetch("https://derivaciones.diapreventivoiapos.com/api/telereceta/crear", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
