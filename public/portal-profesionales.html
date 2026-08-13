@@ -1,72 +1,727 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Portal de Profesionales - IAPOS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal Profesional — IAPOS</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #f0f8ff; display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; box-sizing: border-box; }
-        .portal-container { background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 450px; }
-        .logo-background { background-color: #005A9C; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: inline-block; }
-        .logo-background img { max-width: 150px; display: block; }
-        h1 { color: #005A9C; }
-        input { width: 100%; box-sizing: border-box; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
-        button { background-color: #009A44; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-size: 1.1em; font-weight: bold; }
-        .error { color: red; margin-top: 10px; font-weight: bold; }
-        .registro-link { margin-top: 25px; font-size: 0.9em; }
-        .registro-link a { color: #005A9C; font-weight: bold; text-decoration: none; }
+      body {
+        font-family: "Montserrat", sans-serif;
+      }
+      .card-hover {
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .card-hover:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+      }
+      .paciente-nuevo {
+        animation: pulseGreen 1s ease-in-out;
+      }
+      @keyframes pulseGreen {
+        0% {
+          background-color: white;
+        }
+        50% {
+          background-color: #dcfce7;
+        }
+        100% {
+          background-color: white;
+        }
+      }
     </style>
-</head>
-<body>
-    <div class="portal-container">
-        <div class="logo-background">
-            <img src="logo_iapos.png" alt="Logo IAPOS">
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <!-- HEADER -->
+    <header style="background-color: #014189">
+      <div
+        style="
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 12px 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 16px">
+          <img src="logo_iapos.png" alt="IAPOS" style="height: 48px" />
+          <div>
+            <div style="font-size: 16px; font-weight: 700; color: #fff">
+              Portal Profesional
+            </div>
+            <div
+              style="
+                font-size: 11px;
+                color: #00a8e7;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+              "
+            >
+              Día Preventivo IAPOS
+            </div>
+          </div>
         </div>
-        <h1>Portal de Profesionales</h1>
-        <p style="margin-top: -15px; color: #666;">Inicia sesión para continuar.</p>
-        
-        <form id="login-form">
-            <input type="email" id="user" name="user" placeholder="Usuario (email)" required>
-            <input type="password" id="pass" name="pass" placeholder="Contraseña" required>
-            <button type="submit">Ingresar</button>
-        </form>
-        <p id="error-message" class="error" style="display:none;"></p>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span
+            id="nombreUsuario"
+            style="color: #00a8e7; font-size: 13px; font-weight: 600"
+          ></span>
+          <button
+            onclick="cerrarSesion()"
+            style="
+              background: #dc2626;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              padding: 6px 14px;
+              font-size: 12px;
+              font-weight: 700;
+              cursor: pointer;
+            "
+          >
+            <i class="fas fa-sign-out-alt mr-1"></i> Salir
+          </button>
+        </div>
+      </div>
+      <div style="background-color: #00a8e7; height: 4px"></div>
+    </header>
 
-        <div class="registro-link">
-            <span>¿Es tu primera vez aquí?</span>
-            <a href="registro-profesionales.html">Regístrate para obtener tu acceso.</a>
-        </div>
+    <!-- TABS -->
+    <div
+      style="
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      "
+    >
+      <div
+        style="
+          max-width: 1100px;
+          margin: 0 auto;
+          display: flex;
+          overflow-x: auto;
+        "
+      >
+        <button
+          onclick="mostrarSeccion('consultorio')"
+          id="tab-consultorio"
+          class="px-5 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 whitespace-nowrap"
+        >
+          🏥 Mi Consultorio
+        </button>
+        <button
+          onclick="mostrarSeccion('capacitacion')"
+          id="tab-capacitacion"
+          class="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap"
+        >
+          📚 Capacitación
+        </button>
+        <button
+          onclick="mostrarSeccion('novedades')"
+          id="tab-novedades"
+          class="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap"
+        >
+          📢 Novedades
+        </button>
+        <button
+          onclick="mostrarSeccion('facturacion')"
+          id="tab-facturacion"
+          class="px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap"
+        >
+          💰 Facturación
+        </button>
+      </div>
     </div>
-    <script>
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = Object.fromEntries(new FormData(e.target).entries());
-            const submitButton = e.target.querySelector('button');
-            const errorMessage = document.getElementById('error-message');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Verificando...';
-            errorMessage.style.display = 'none';
 
-            try {
-                const response = await fetch('/api/profesionales/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    sessionStorage.setItem('profesional-logueado', result.name);
-                    window.location.href = 'panel-profesional.html';
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                errorMessage.textContent = error.message;
-                errorMessage.style.display = 'block';
-                submitButton.disabled = false;
-                submitButton.textContent = 'Ingresar';
-            }
+    <main style="max-width: 1100px; margin: 0 auto; padding: 24px 16px">
+      <!-- MI CONSULTORIO -->
+      <div id="seccion-consultorio">
+        <!-- Accesos rápidos -->
+        <div
+          class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"
+          id="accesoRapido"
+        ></div>
+
+        <!-- Agenda del día -->
+        <div class="bg-white rounded-xl shadow p-5 border border-blue-100">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold text-blue-800 flex items-center gap-2">
+              <i class="fas fa-calendar-day text-blue-500"></i> Agenda de Cierre
+              DP
+            </h2>
+            <div class="flex items-center gap-3">
+              <input
+                type="date"
+                id="fechaAgenda"
+                class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onclick="cargarAgenda()"
+                class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-blue-700"
+              >
+                <i class="fas fa-sync-alt"></i>
+              </button>
+              <span id="estadoPolling" class="text-xs text-gray-400"></span>
+            </div>
+          </div>
+
+          <!-- Resumen -->
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div
+              class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center"
+            >
+              <p class="text-2xl font-bold text-blue-700" id="cntAgendados">
+                -
+              </p>
+              <p class="text-xs text-blue-600">Agendados</p>
+            </div>
+            <div
+              class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+            >
+              <p class="text-2xl font-bold text-green-700" id="cntPresentes">
+                -
+              </p>
+              <p class="text-xs text-green-600">En sala de espera</p>
+            </div>
+            <div
+              class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center"
+            >
+              <p class="text-2xl font-bold text-gray-700" id="cntRealizados">
+                -
+              </p>
+              <p class="text-xs text-gray-600">Realizados</p>
+            </div>
+          </div>
+
+          <!-- Telerecetas pendientes -->
+          <div id="listaTelerecetas" class="mb-4"></div>
+
+          <!-- Lista turnos -->
+          <div id="listaTurnosConsultorio">
+            <p class="text-center text-gray-400 py-8">Cargando agenda...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAPACITACIÓN -->
+      <div id="seccion-capacitacion" class="hidden">
+        <div
+          class="bg-white rounded-xl shadow p-8 text-center border border-gray-200"
+        >
+          <i class="fas fa-book-open text-4xl text-blue-400 mb-3"></i>
+          <h3 class="font-bold text-gray-700 text-lg mb-2">Capacitación</h3>
+          <p class="text-gray-400 text-sm">
+            Próximamente — materiales de capacitación y protocolos del programa.
+          </p>
+        </div>
+      </div>
+
+      <!-- NOVEDADES -->
+      <div id="seccion-novedades" class="hidden">
+        <div
+          class="bg-white rounded-xl shadow p-8 text-center border border-gray-200"
+        >
+          <i class="fas fa-bullhorn text-4xl text-yellow-400 mb-3"></i>
+          <h3 class="font-bold text-gray-700 text-lg mb-2">Novedades</h3>
+          <p class="text-gray-400 text-sm">
+            Próximamente — comunicados y novedades del programa.
+          </p>
+        </div>
+      </div>
+
+      <!-- FACTURACIÓN -->
+      <div id="seccion-facturacion" class="hidden">
+        <div
+          class="bg-white rounded-xl shadow p-8 text-center border border-gray-200"
+        >
+          <i
+            class="fas fa-file-invoice-dollar text-4xl text-green-400 mb-3"
+          ></i>
+          <h3 class="font-bold text-gray-700 text-lg mb-2">Facturación</h3>
+          <p class="text-gray-400 text-sm">
+            Próximamente — gestión de facturación del programa.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <!-- AUDIO notificación -->
+    <audio id="audioNotif" preload="auto">
+      <source
+        src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+        type="audio/ogg"
+      />
+    </audio>
+
+    <script>
+      // ── AUTH ──
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        const tokenUrl = params.get("token");
+        if (tokenUrl) {
+          localStorage.setItem("dpToken", tokenUrl);
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+        const token = localStorage.getItem("dpToken");
+        if (!token) {
+          window.location.href =
+            "https://acceso.diapreventivoiapos.com/login.html?redirect=profesionales";
+          return;
+        }
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          if (Date.now() >= payload.exp * 1000) {
+            localStorage.removeItem("dpToken");
+            window.location.href =
+              "https://acceso.diapreventivoiapos.com/login.html?redirect=profesionales";
+            return;
+          }
+          window.dpPayload = payload;
+        } catch (e) {
+          window.location.href =
+            "https://acceso.diapreventivoiapos.com/login.html?redirect=profesionales";
+        }
+      })();
+
+      // ── INIT ──
+      document.addEventListener("DOMContentLoaded", () => {
+        const payload = window.dpPayload;
+        document.getElementById("nombreUsuario").textContent =
+          `${payload.nombre || ""} ${payload.apellido || ""}`.trim();
+
+        // Fecha de hoy
+        document.getElementById("fechaAgenda").value = new Date()
+          .toISOString()
+          .split("T")[0];
+        const puedeInterno = payload.puede_cerrar_interno === true;
+        const puedeExterno = payload.puede_derivar === true;
+
+        renderAccesosRapidos(
+          payload.profesion || payload.rol,
+          puedeInterno,
+          puedeExterno,
+        );
+
+        if (puedeInterno) {
+          cargarAgenda();
+          iniciarPolling();
+        } else {
+          // Ocultar sección de agenda
+          document.querySelector(
+            ".bg-white.rounded-xl.shadow.p-5.border.border-blue-100",
+          ).style.display = "none";
+        }
+
+        if (puedeExterno) {
+          renderSeccionDerivacion();
+        }
+      });
+
+      function cerrarSesion() {
+        localStorage.removeItem("dpToken");
+        window.location.href =
+          "https://acceso.diapreventivoiapos.com/login.html";
+      }
+
+      // ── TABS ──
+      function mostrarSeccion(sec) {
+        ["consultorio", "capacitacion", "novedades", "facturacion"].forEach(
+          (s) => {
+            document.getElementById(`seccion-${s}`).classList.add("hidden");
+            document.getElementById(`tab-${s}`).className =
+              "px-5 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 whitespace-nowrap";
+          },
+        );
+        document.getElementById(`seccion-${sec}`).classList.remove("hidden");
+        document.getElementById(`tab-${sec}`).className =
+          "px-5 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 whitespace-nowrap";
+      }
+
+      function renderAccesosRapidos(rol, puedeInterno, puedeExterno) {
+        const accesos = [];
+
+        if (puedeInterno) {
+          accesos.push({
+            label: "Consultas Médicas",
+            icon: "fa-user-md",
+            color: "bg-blue-600",
+            url: "https://cierre.diapreventivoiapos.com/index-medico.html",
+          });
+        }
+        if (puedeExterno) {
+          accesos.push({
+            label: "Derivar Paciente",
+            icon: "fa-paper-plane",
+            color: "bg-green-600",
+            url: "https://derivaciones.diapreventivoiapos.com/derivacion.html",
+          });
+          accesos.push({
+            label: "Cierre DP",
+            icon: "fa-file-medical",
+            color: "bg-blue-600",
+            url: "https://cierre.diapreventivoiapos.com/index-medico.html",
+          });
+        }
+        accesos.push({
+          label: "Consulta Afiliado",
+          icon: "fa-magnifying-glass",
+          color: "bg-purple-600",
+          url: "https://acceso.diapreventivoiapos.com/consulta-afiliado.html",
         });
+
+        const token = localStorage.getItem("dpToken");
+        document.getElementById("accesoRapido").innerHTML = accesos
+          .map(
+            (a) => `
+        <a href="${a.url}?token=${token}" target="_blank"
+            class="card-hover ${a.color} text-white rounded-xl p-4 text-center cursor-pointer no-underline">
+            <i class="fas ${a.icon} text-2xl mb-2 block"></i>
+            <p class="text-sm font-bold">${a.label}</p>
+        </a>`,
+          )
+          .join("");
+      }
+
+      // ── AGENDA ──
+      let turnosAnteriores = [];
+      let pollingInterval = null;
+      async function cargarTelerecetas(idMedico) {
+        const cont = document.getElementById("listaTelerecetas");
+        try {
+          const res = await fetch(`/api/mis-telerecetas?id_medico=${idMedico}`);
+          const data = await res.json();
+          const avisos = data.avisos || [];
+
+          if (avisos.length === 0) {
+            cont.innerHTML = "";
+            return;
+          }
+
+          cont.innerHTML = `
+            <div class="bg-purple-50 border-2 border-purple-300 rounded-xl p-3">
+              <p class="font-bold text-purple-800 text-sm mb-2">
+                <i class="fas fa-prescription mr-1"></i>Telerecetas pendientes (${avisos.length})
+              </p>
+              ${avisos
+                .map(
+                  (a) => `
+                <div class="bg-white rounded-lg p-3 mb-2 border border-purple-200">
+                  <p class="font-bold text-gray-800">${a.apellido_y_nombre || a.dni}</p>
+                  <p class="text-xs text-gray-500">DNI: ${a.dni}</p>
+                  ${
+                    a.telefono || a.email
+                      ? `<div class="mt-1 bg-gray-50 rounded p-2 text-xs">
+                          ${a.telefono ? `<p><i class="fas fa-phone mr-1"></i>${a.telefono}</p>` : ""}
+                          ${a.email ? `<p><i class="fas fa-envelope mr-1"></i>${a.email}</p>` : ""}
+                        </div>`
+                      : ""
+                  }
+                  ${a.observaciones ? `<p class="text-xs text-gray-600 mt-1 italic">"${a.observaciones}"</p>` : ""}
+                  <button onclick="marcarTelerecetaRealizada(${a.id}, ${idMedico})"
+                    class="mt-2 text-xs bg-purple-600 text-white px-3 py-1 rounded-lg font-bold hover:bg-purple-700">
+                    ✓ Marcar completada
+                  </button>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>`;
+        } catch (e) {
+          cont.innerHTML = "";
+        }
+      }
+
+      async function marcarTelerecetaRealizada(id, idMedico) {
+        try {
+          await fetch(`/api/telereceta/${id}/completar`, { method: "PATCH" });
+          cargarTelerecetas(idMedico);
+        } catch (e) {
+          alert("Error al marcar como completada.");
+        }
+      }
+
+      async function cargarAgenda() {
+        const fecha = document.getElementById("fechaAgenda").value;
+        const lista = document.getElementById("listaTurnosConsultorio");
+        const payload = window.dpPayload;
+
+        // Buscar id_medico desde el profesional logueado
+        const idProfesional = payload?.id;
+
+        try {
+          // Primero buscar el id_medico del profesional
+          const resMedico = await fetch(
+            `/api/mi-medico?id_profesional=${idProfesional}`,
+          );
+          const dataMedico = await resMedico.json();
+
+          if (!dataMedico.id_medico) {
+            lista.innerHTML =
+              '<p class="text-center text-gray-400 py-8">No tenés agenda configurada. Contactá al coordinador.</p>';
+            return;
+          }
+
+          const res = await fetch(
+            `/api/mi-agenda-cierre?fecha=${fecha}&id_medico=${dataMedico.id_medico}`,
+          );
+          const data = await res.json();
+          const turnos = data.turnos || [];
+
+          cargarTelerecetas(dataMedico.id_medico);
+
+          // Detectar nuevos PRESENTE para notificar
+          const nuevosPresentes = turnos.filter(
+            (t) =>
+              t.estado === "PRESENTE" &&
+              !turnosAnteriores.find(
+                (p) => p.id === t.id && p.estado === "PRESENTE",
+              ),
+          );
+          if (nuevosPresentes.length > 0 && turnosAnteriores.length > 0) {
+            notificar(nuevosPresentes);
+          }
+          turnosAnteriores = turnos;
+
+          // Contadores
+          document.getElementById("cntAgendados").textContent = turnos.filter(
+            (t) => t.estado === "AGENDADO",
+          ).length;
+          document.getElementById("cntPresentes").textContent = turnos.filter(
+            (t) => t.estado === "PRESENTE",
+          ).length;
+          document.getElementById("cntRealizados").textContent = turnos.filter(
+            (t) => t.estado === "REALIZADO",
+          ).length;
+
+          if (turnos.length === 0) {
+            lista.innerHTML =
+              '<p class="text-center text-gray-400 py-8">No hay turnos para este día.</p>';
+            return;
+          }
+
+          const COLORES = {
+            AGENDADO: "border-blue-200 bg-blue-50",
+            PRESENTE: "border-green-400 bg-green-50",
+            REALIZADO: "border-gray-400 bg-gray-200 opacity-80",
+          };
+
+          lista.innerHTML = turnos
+            .map(
+              (t) => `
+            <div id="turno-${t.id}" class="border-2 rounded-xl p-4 mb-3 ${COLORES[t.estado] || ""} transition-all duration-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-bold text-gray-800">${t.apellido_y_nombre || t.dni}</p>
+                        <p class="text-xs text-gray-500">DNI: ${t.dni}</p>
+                        <p class="text-xs text-gray-500">🕐 ${t.hora?.substring(0, 5) || "S/H"}</p>
+                        ${t.tipo_turno ? `<p class="text-xs font-bold text-indigo-600 mt-1">${t.tipo_turno}${t.modalidad ? " — " + t.modalidad : ""}</p>` : ""}
+                        ${
+                          t.telefono || t.email
+                            ? `<div class="mt-2 bg-gray-100 rounded-lg p-2 text-xs">
+                                ${t.telefono ? `<p><i class="fas fa-phone mr-1"></i>${t.telefono}</p>` : ""}
+                                ${t.email ? `<p><i class="fas fa-envelope mr-1"></i>${t.email}</p>` : ""}
+                              </div>`
+                            : ""
+                        }
+                        ${
+                          t.observaciones
+                            ? `<p class="text-xs text-gray-500 mt-1 italic">"${t.observaciones}"</p>`
+                            : ""
+                        }
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs px-3 py-1 rounded-full font-bold ${
+                          t.estado === "PRESENTE"
+                            ? "bg-green-100 text-green-700"
+                            : t.estado === "REALIZADO"
+                              ? "bg-gray-100 text-gray-600"
+                              : "bg-blue-100 text-blue-700"
+                        }">${t.estado}</span>
+                        ${
+                          t.estado === "PRESENTE"
+                            ? `
+                        <div class="mt-2">
+                            <button onclick="marcarRealizado(${t.id})"
+                                class="bg-blue-600 text-white text-xs px-3 py-1 rounded-lg font-bold hover:bg-blue-700">
+                                ✓ Marcar realizado
+                            </button>
+                        </div>`
+                            : ""
+                        }
+                    </div>
+                </div>
+                ${
+                  t.estado === "PRESENTE"
+                    ? `
+                <div class="mt-2 flex items-center gap-2 bg-green-100 rounded-lg px-3 py-2">
+                    <span class="text-green-600 font-bold text-sm animate-pulse">🟢 Paciente en sala de espera</span>
+                </div>`
+                    : ""
+                }
+            </div>`,
+            )
+            .join("");
+        } catch (e) {
+          lista.innerHTML =
+            '<p class="text-red-500 text-center text-sm">Error al cargar agenda.</p>';
+        }
+      }
+
+      async function marcarRealizado(id) {
+        const token = localStorage.getItem("dpToken");
+        try {
+          await fetch(`/api/mi-agenda-cierre/${id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ estado: "REALIZADO" }),
+          });
+          cargarAgenda();
+        } catch (e) {
+          alert("Error al actualizar.");
+        }
+      }
+
+      function notificar(nuevos) {
+        // Sonido
+        try {
+          document.getElementById("audioNotif").play();
+        } catch (e) {}
+
+        // Notificación del browser
+        if (Notification.permission === "granted") {
+          nuevos.forEach((t) => {
+            new Notification("🟢 Paciente en sala de espera", {
+              body: `${t.apellido_y_nombre || t.dni} — Cierre DP ${t.hora?.substring(0, 5) || ""}`,
+              icon: "/logo_iapos.png",
+            });
+          });
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then((perm) => {
+            if (perm === "granted") notificar(nuevos);
+          });
+        }
+
+        // Highlight visual
+        nuevos.forEach((t) => {
+          setTimeout(() => {
+            const el = document.getElementById(`turno-${t.id}`);
+            if (el) el.classList.add("paciente-nuevo");
+          }, 100);
+        });
+      }
+
+      function iniciarPolling() {
+        const indicator = document.getElementById("estadoPolling");
+        pollingInterval = setInterval(() => {
+          cargarAgenda();
+          indicator.textContent = `↻ ${new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+        }, 30000);
+
+        // Polling derivaciones cada 60 segundos
+        setInterval(() => {
+          cargarMisDerivaciones();
+        }, 60000);
+      }
+      function renderSeccionDerivacion() {
+        const main = document.getElementById("seccion-consultorio");
+        const div = document.createElement("div");
+        div.className =
+          "bg-white rounded-xl shadow p-5 border border-green-100 mt-4";
+        div.innerHTML = `
+        <h2 class="font-bold text-green-800 flex items-center gap-2 mb-4">
+            <i class="fas fa-paper-plane text-green-500"></i> Mis Derivaciones
+        </h2>
+        <div id="listaMisDerivaciones">
+            <p class="text-center text-gray-400 py-8">Cargando derivaciones...</p>
+        </div>`;
+        main.appendChild(div);
+        cargarMisDerivaciones();
+      }
+      async function cargarMisDerivaciones() {
+        const payload = window.dpPayload;
+        const lista = document.getElementById("listaMisDerivaciones");
+        try {
+          const res = await fetch(
+            `/api/mis-derivaciones?id_profesional=${payload.id}`,
+          );
+          const data = await res.json();
+          const derivaciones = data.derivaciones || [];
+
+          if (derivaciones.length === 0) {
+            lista.innerHTML =
+              '<p class="text-center text-gray-400 py-4">No hay derivaciones registradas.</p>';
+            return;
+          }
+
+          // Notificar si hay nuevos LISTO_PARA_CERRAR
+          const listos = derivaciones.filter(
+            (d) => d.estado === "LISTO_PARA_CERRAR",
+          );
+          if (listos.length > 0) {
+            try {
+              document.getElementById("audioNotif").play();
+            } catch (e) {}
+          }
+
+          const COLORES = {
+            PENDIENTE: "border-yellow-200 bg-yellow-50",
+            EN_PROCESO: "border-blue-200 bg-blue-50",
+            LISTO_PARA_CERRAR: "border-green-400 bg-green-50",
+            CERRADO: "border-gray-200 bg-gray-50 opacity-60",
+          };
+
+          lista.innerHTML = derivaciones
+            .map(
+              (d) => `
+            <div class="border-2 rounded-xl p-4 mb-3 ${COLORES[d.estado] || ""}">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-bold text-gray-800">${d.apellido}, ${d.nombre}</p>
+                        <p class="text-xs text-gray-500">DNI: ${d.dni}</p>
+                        <p class="text-xs text-gray-400">Derivado: ${d.fecha_derivacion}</p>
+                    </div>
+                    <span class="text-xs px-3 py-1 rounded-full font-bold border ${
+                      d.estado === "LISTO_PARA_CERRAR"
+                        ? "bg-green-100 text-green-700 border-green-400"
+                        : d.estado === "PENDIENTE"
+                          ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+                          : "bg-gray-100 text-gray-600 border-gray-300"
+                    }">${d.estado.replace(/_/g, " ")}</span>
+                </div>
+                ${
+                  d.estado === "LISTO_PARA_CERRAR"
+                    ? `
+                <div class="mt-2 flex items-center gap-2 bg-green-100 rounded-lg px-3 py-2">
+                    <span class="text-green-700 font-bold text-sm animate-pulse">🟢 Paciente listo — coordiná el cierre en tu consultorio</span>
+                </div>`
+                    : ""
+                }
+            </div>`,
+            )
+            .join("");
+        } catch (e) {
+          lista.innerHTML =
+            '<p class="text-red-500 text-sm text-center">Error al cargar derivaciones.</p>';
+        }
+      }
     </script>
-</body>
+  </body>
 </html>

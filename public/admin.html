@@ -1541,16 +1541,46 @@ async function eliminarDiaBloqueado(id) {
         const nombreMedico = document.getElementById("nc-medico-nombre").value;
         const idSede = document.getElementById("nc-sede").value;
         const obs = document.getElementById("nc-obs").value.trim();
-        const tipoTurno = document.getElementById("nc-tipo-turno").value;           // ← nuevo
-        const sinModalidad = ["Telereceta", "Cierre DP - Oficio"];                  // ← nuevo
-        const modalidad = sinModalidad.includes(tipoTurno)                          // ← nuevo
-        ? null
-        : document.getElementById("nc-modalidad").value;
+        const tipoTurno = document.getElementById("nc-tipo-turno").value;
+
         if (!dni) return alert("Ingresá el DNI del afiliado.");
+        if (!idMedico) return alert("Seleccioná un médico.");
+        if (!tipoTurno) return alert("Seleccioná el tipo de turno.");
+
+        // Telereceta es solo un aviso — no ocupa franja horaria.
+        if (tipoTurno === "Telereceta") {
+          try {
+            const res = await fetch("/api/telereceta/crear", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                dni,
+                apellido_y_nombre: nombre,
+                id_medico: idMedico,
+                observaciones: obs || null,
+                creado_por: window.dpPayload?.nombre || null,
+              }),
+            });
+            const data = await res.json();
+            if (data.success) {
+              cerrarModalNuevoTurnoCierre();
+              alert("Telereceta avisada al médico correctamente.");
+            } else {
+              alert("Error al guardar: " + data.message);
+            }
+          } catch (e) {
+            alert("Error de conexión.");
+          }
+          return;
+        }
+
         if (!fecha) return alert("Seleccioná una fecha.");
         if (!hora) return alert("Seleccioná un horario.");
-        if (!idMedico) return alert("Seleccioná un médico.");
-        if (!tipoTurno) return alert("Seleccioná el tipo de turno."); 
+
+        const sinModalidad = ["Telereceta", "Cierre DP - Oficio"];
+        const modalidad = sinModalidad.includes(tipoTurno)
+          ? null
+          : document.getElementById("nc-modalidad").value;
 
         try {
           const res = await fetch("/api/agenda-cierre", {
@@ -1566,7 +1596,7 @@ async function eliminarDiaBloqueado(id) {
               id_sede_dp: parseInt(idSede),
               observaciones: obs || null,
               estado: "AGENDADO",
-              tipo_turno: tipoTurno,      // ← nuevo
+              tipo_turno: tipoTurno,
               modalidad: modalidad,
             }),
           });
