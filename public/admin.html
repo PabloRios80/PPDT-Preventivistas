@@ -701,14 +701,16 @@ async function agregarMedicoDesdeSelect() {
         const tabDerivaciones = document.getElementById("tab-derivaciones");
         const tabBloqueos = document.getElementById("tab-bloqueos");
         const tabAgregar = document.getElementById("tab-agregar");
+        const tabHorarios = document.getElementById("tab-horarios");
 
         // Vistas
-        const vistas = {
-          turnos: document.getElementById("vista-turnos"),
-          derivaciones: document.getElementById("vista-derivaciones"),
-          bloqueos: document.getElementById("vista-bloqueos"),
-          agregar: document.getElementById("vista-agregar"),
-        };
+      const vistas = {
+  turnos: document.getElementById("vista-turnos"),
+  derivaciones: document.getElementById("vista-derivaciones"),
+  bloqueos: document.getElementById("vista-bloqueos"),
+  agregar: document.getElementById("vista-agregar"),
+  horarios: document.getElementById("vista-horarios"),
+};
 
         const turnosTableBody = document.querySelector("#turnos-table tbody");
         const derivacionesTableBody = document.querySelector(
@@ -725,19 +727,15 @@ const payload = window.dpPayload;
 
 let ciudadGuardada;
 if (payload && !payload.es_superuser) {
-  ciudadGuardada = MAPA_SEDE_A_CITY[payload.id_sede_dp];
-  if (ciudadGuardada) {
-    citySelect.value = ciudadGuardada;
-    citySelect.disabled = true;
-  } else {
-    citySelect.disabled = true;
-  }
+  ciudadGuardada = MAPA_SEDE_A_CITY[payload.id_sede_dp] || "sin_configurar";
+  citySelect.value = ciudadGuardada;
+  citySelect.disabled = true;
 } else {
   ciudadGuardada = localStorage.getItem("admin-ciudad-preferida") || "santafe";
   citySelect.value = ciudadGuardada;
 }
 
-if (ciudadGuardada) actualizarLabelsCiudad(ciudadGuardada);
+actualizarLabelsCiudad(ciudadGuardada);
 
 citySelect.addEventListener("change", (e) => {
   const nuevaCiudad = e.target.value;
@@ -746,12 +744,13 @@ citySelect.addEventListener("change", (e) => {
   recargarDatos();
 });
 
-        function actualizarLabelsCiudad(ciudad) {
-          let nombreCiudad = "Santa Fe";
-          if (ciudad === "rosario") nombreCiudad = "Rosario";
-          if (ciudad === "fuerzas") nombreCiudad = "Fuerzas de Seguridad";
-          ciudadLabels.forEach((span) => (span.textContent = nombreCiudad));
-        }
+      function actualizarLabelsCiudad(ciudad) {
+  let nombreCiudad = "Santa Fe";
+  if (ciudad === "rosario") nombreCiudad = "Rosario";
+  if (ciudad === "fuerzas") nombreCiudad = "Fuerzas de Seguridad";
+  if (ciudad === "sin_configurar") nombreCiudad = "Tu sede (turnera aún no configurada)";
+  ciudadLabels.forEach((span) => (span.textContent = nombreCiudad));
+}
 
         function recargarDatos() {
           cargarTurnosAgendados();
@@ -781,7 +780,12 @@ citySelect.addEventListener("change", (e) => {
         if (tabAgregar) {
           tabAgregar.addEventListener("click", () => mostrarVista("agregar"));
         }
-
+if (tabHorarios) {
+  tabHorarios.addEventListener("click", () => {
+    mostrarVista("horarios");
+    cargarHorariosSede();
+  });
+}
         logoutBtn.addEventListener("click", () => {
           localStorage.removeItem("dpToken");
           window.location.href =
@@ -789,10 +793,14 @@ citySelect.addEventListener("change", (e) => {
         });
         // 5. FUNCIONES PARA CARGAR DATOS
         async function cargarTurnosAgendados() {
-          turnosTableBody.innerHTML =
-            '<tr><td colspan="6">Cargando...</td></tr>';
-          const ciudad = citySelect.value;
-          try {
+  turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
+  const ciudad = citySelect.value;
+  if (ciudad === "sin_configurar") {
+    turnosTableBody.innerHTML =
+      '<tr><td colspan="6" style="text-align:center;">Tu sede todavía no tiene turnera pública configurada.</td></tr>';
+    return;
+  }
+  try {
             const response = await fetch(`/api/admin/turnos?city=${ciudad}`);
             const data = await response.json();
             if (data.status === "success" && data.appointments.length > 0) {
@@ -915,12 +923,17 @@ citySelect.addEventListener("change", (e) => {
         }
 
         async function cargarDiasBloqueados() {
-          listaDiasBloqueados.innerHTML = "<li>Cargando...</li>";
-          const ciudad = citySelect.value;
-          const response = await fetch(
-            `/api/admin/dias-bloqueados?city=${ciudad}`,
-          );
-          const result = await response.json();
+  listaDiasBloqueados.innerHTML = "<li>Cargando...</li>";
+  const ciudad = citySelect.value;
+  if (ciudad === "sin_configurar") {
+    listaDiasBloqueados.innerHTML =
+      "<li>Tu sede todavía no tiene turnera pública configurada.</li>";
+    return;
+  }
+  const response = await fetch(
+    `/api/admin/dias-bloqueados?city=${ciudad}`,
+  );
+  const result = await response.json();
 
           if (result.status === "success") {
             listaDiasBloqueados.innerHTML = "";
