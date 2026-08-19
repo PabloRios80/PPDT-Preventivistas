@@ -719,19 +719,32 @@ async function agregarMedicoDesdeSelect() {
         const listaDiasBloqueados = document.getElementById(
           "lista-dias-bloqueados",
         );
+// 3. CAMBIO DE CIUDAD (ahora respeta la sede del PV, salvo superuser)
+const MAPA_SEDE_A_CITY = { 1: "santafe", 3: "rosario" }; // hoy solo estas 2 sedes tienen turnera pública andando
+const payload = window.dpPayload;
 
-        // 3. CAMBIO DE CIUDAD
-        const ciudadGuardada =
-          localStorage.getItem("admin-ciudad-preferida") || "santafe";
-        citySelect.value = ciudadGuardada;
-        actualizarLabelsCiudad(ciudadGuardada);
+let ciudadGuardada;
+if (payload && !payload.es_superuser) {
+  ciudadGuardada = MAPA_SEDE_A_CITY[payload.id_sede_dp];
+  if (ciudadGuardada) {
+    citySelect.value = ciudadGuardada;
+    citySelect.disabled = true;
+  } else {
+    citySelect.disabled = true;
+  }
+} else {
+  ciudadGuardada = localStorage.getItem("admin-ciudad-preferida") || "santafe";
+  citySelect.value = ciudadGuardada;
+}
 
-        citySelect.addEventListener("change", (e) => {
-          const nuevaCiudad = e.target.value;
-          localStorage.setItem("admin-ciudad-preferida", nuevaCiudad);
-          actualizarLabelsCiudad(nuevaCiudad);
-          recargarDatos();
-        });
+if (ciudadGuardada) actualizarLabelsCiudad(ciudadGuardada);
+
+citySelect.addEventListener("change", (e) => {
+  const nuevaCiudad = e.target.value;
+  localStorage.setItem("admin-ciudad-preferida", nuevaCiudad);
+  actualizarLabelsCiudad(nuevaCiudad);
+  recargarDatos();
+});
 
         function actualizarLabelsCiudad(ciudad) {
           let nombreCiudad = "Santa Fe";
