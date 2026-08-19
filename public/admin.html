@@ -721,26 +721,27 @@ async function agregarMedicoDesdeSelect() {
         const listaDiasBloqueados = document.getElementById(
           "lista-dias-bloqueados",
         );
+
 // 3. CAMBIO DE CIUDAD (ahora respeta la sede del PV, salvo superuser)
-const MAPA_SEDE_A_CITY = { 1: "santafe", 3: "rosario" }; // hoy solo estas 2 sedes tienen turnera pública andando
+const MAPA_SEDE_A_CITY = { 1: "santafe", 3: "rosario" };
 const payload = window.dpPayload;
 
-let ciudadGuardada;
+window.cityActiva = null; // esta es la que van a usar los fetch, no citySelect.value
+
 if (payload && !payload.es_superuser) {
-  ciudadGuardada = MAPA_SEDE_A_CITY[payload.id_sede_dp] || "sin_configurar";
-  citySelect.value = ciudadGuardada;
+  window.cityActiva = MAPA_SEDE_A_CITY[payload.id_sede_dp] || "sin_configurar";
   citySelect.disabled = true;
 } else {
-  ciudadGuardada = localStorage.getItem("admin-ciudad-preferida") || "santafe";
-  citySelect.value = ciudadGuardada;
+  window.cityActiva = localStorage.getItem("admin-ciudad-preferida") || "santafe";
+  citySelect.value = window.cityActiva;
 }
 
-actualizarLabelsCiudad(ciudadGuardada);
+actualizarLabelsCiudad(window.cityActiva);
 
 citySelect.addEventListener("change", (e) => {
-  const nuevaCiudad = e.target.value;
-  localStorage.setItem("admin-ciudad-preferida", nuevaCiudad);
-  actualizarLabelsCiudad(nuevaCiudad);
+  window.cityActiva = e.target.value;
+  localStorage.setItem("admin-ciudad-preferida", window.cityActiva);
+  actualizarLabelsCiudad(window.cityActiva);
   recargarDatos();
 });
 
@@ -794,7 +795,7 @@ if (tabHorarios) {
         // 5. FUNCIONES PARA CARGAR DATOS
         async function cargarTurnosAgendados() {
   turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
-  const ciudad = citySelect.value;
+  const ciudad = window.cityActiva;
   if (ciudad === "sin_configurar") {
     turnosTableBody.innerHTML =
       '<tr><td colspan="6" style="text-align:center;">Tu sede todavía no tiene turnera pública configurada.</td></tr>';
@@ -924,7 +925,7 @@ if (tabHorarios) {
 
         async function cargarDiasBloqueados() {
   listaDiasBloqueados.innerHTML = "<li>Cargando...</li>";
-  const ciudad = citySelect.value;
+  const ciudad = window.cityActiva;
   if (ciudad === "sin_configurar") {
     listaDiasBloqueados.innerHTML =
       "<li>Tu sede todavía no tiene turnera pública configurada.</li>";
@@ -963,7 +964,7 @@ if (tabHorarios) {
         listaDiasBloqueados.addEventListener("click", async (e) => {
           if (e.target.classList.contains("btn-desbloquear")) {
             const dateToUnblock = e.target.dataset.date;
-            const ciudad = citySelect.value;
+            const ciudad = window.cityActiva;
 
             if (
               confirm(
@@ -1025,7 +1026,7 @@ if (tabHorarios) {
           // Acción MOVER A FUERZAS
           if (e.target.classList.contains("move-btn")) {
             const idTurno = e.target.dataset.id;
-            const ciudad = citySelect.value;
+            const ciudad = window.cityActiva;
 
             if (
               confirm(
@@ -1098,7 +1099,7 @@ if (tabHorarios) {
             alert("Por favor, selecciona una fecha.");
             return;
           }
-          const ciudad = citySelect.value;
+          const ciudad = window.cityActiva;
           if (
             confirm(
               `¿Estás seguro de que quieres bloquear el día ${dateToBlock} en la sede ${ciudad.toUpperCase()}?`,
