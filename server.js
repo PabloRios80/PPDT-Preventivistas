@@ -685,3 +685,58 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servidor Preventivistas corriendo en http://localhost:${PORT}`);
 });
+// Listar horarios de una sede
+app.get("/api/horarios-sede", async (req, res) => {
+  const { id_sede_dp } = req.query;
+  if (!id_sede_dp)
+    return res
+      .status(400)
+      .json({ success: false, message: "Falta id_sede_dp." });
+  try {
+    const { data, error } = await supabase
+      .from("horarios_turnera_sede")
+      .select("*")
+      .eq("id_sede_dp", id_sede_dp)
+      .order("dia_semana", { ascending: true });
+    if (error) throw error;
+    res.json({ success: true, horarios: data });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// Agregar un bloque de horario
+app.post("/api/horarios-sede", async (req, res) => {
+  const { id_sede_dp, dia_semana, hora_inicio, hora_fin, duracion_minutos } =
+    req.body;
+  if (!id_sede_dp || !dia_semana || !hora_inicio || !hora_fin) {
+    return res.status(400).json({ success: false, message: "Faltan datos." });
+  }
+  try {
+    const { error } = await supabase.from("horarios_turnera_sede").insert({
+      id_sede_dp,
+      dia_semana,
+      hora_inicio,
+      hora_fin,
+      duracion_minutos: duracion_minutos || 10,
+      activo: true,
+    });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// Borrar un bloque de horario
+app.delete("/api/horarios-sede/:id", async (req, res) => {
+  try {
+    await supabase
+      .from("horarios_turnera_sede")
+      .delete()
+      .eq("id", req.params.id);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});

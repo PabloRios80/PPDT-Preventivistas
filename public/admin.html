@@ -204,6 +204,7 @@
           <button id="tab-derivaciones" class="tab-button">Derivaciones</button>
           <button id="tab-bloqueos" class="tab-button">Bloquear Días</button>
           <button id="tab-agregar" class="tab-button">
+          <button id="tab-horarios" class="tab-button">Horarios de mi sede</button>
             Agregar Días/Horarios
           </button>
           <button id="tab-cierre" class="tab-button">Agenda Cierre DP</button>
@@ -247,6 +248,37 @@
             <tbody></tbody>
           </table>
         </div>
+        <div id="vista-horarios" class="vista">
+  <h3>Horario de atención de tu sede</h3>
+  <div style="display:flex; gap:8px; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap;">
+    <div>
+      <label style="display:block; font-size:12px; font-weight:bold;">Día</label>
+      <select id="horario-dia">
+        <option value="1">Lunes</option>
+        <option value="2">Martes</option>
+        <option value="3">Miércoles</option>
+        <option value="4">Jueves</option>
+        <option value="5">Viernes</option>
+        <option value="6">Sábado</option>
+        <option value="7">Domingo</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block; font-size:12px; font-weight:bold;">Desde</label>
+      <input type="time" id="horario-desde" value="08:00" />
+    </div>
+    <div>
+      <label style="display:block; font-size:12px; font-weight:bold;">Hasta</label>
+      <input type="time" id="horario-hasta" value="12:00" />
+    </div>
+    <div>
+      <label style="display:block; font-size:12px; font-weight:bold;">Duración (min)</label>
+      <input type="number" id="horario-duracion" value="10" style="width:70px;" />
+    </div>
+    <button onclick="agregarHorarioSede()" class="action-button btn-green">Agregar bloque</button>
+  </div>
+  <ul id="lista-horarios-sede" style="list-style:none; padding:0;"></ul>
+</div>
         <div id="vista-bloqueos" class="vista">
           <h3>
             Gestión de Días No Laborables (<span class="ciudad-actual-label"
@@ -1207,6 +1239,52 @@ async function agregarMedicoDesdeSelect() {
             '<tr><td colspan="6" style="text-align:center; color:red;">Error al cargar.</td></tr>';
         }
       }
+
+      const DIAS_NOMBRE = { 1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves", 5: "Viernes", 6: "Sábado", 7: "Domingo" };
+
+function idSedeActual() {
+  return window.dpPayload.id_sede_dp; // el superuser lo resolvemos aparte, ver nota abajo
+}
+
+async function cargarHorariosSede() {
+  const id_sede_dp = idSedeActual();
+  if (!id_sede_dp) return;
+  const res = await fetch(`/api/horarios-sede?id_sede_dp=${id_sede_dp}`);
+  const data = await res.json();
+  const lista = document.getElementById("lista-horarios-sede");
+  lista.innerHTML = (data.horarios || [])
+    .map(
+      (h) => `
+      <li style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
+        <span><strong>${DIAS_NOMBRE[h.dia_semana]}</strong>: ${h.hora_inicio.slice(0,5)} a ${h.hora_fin.slice(0,5)} — turnos cada ${h.duracion_minutos} min</span>
+        <button class="cancel-btn" onclick="eliminarHorarioSede(${h.id})">Eliminar</button>
+      </li>`,
+    )
+    .join("");
+}
+
+async function agregarHorarioSede() {
+  const id_sede_dp = idSedeActual();
+  const dia_semana = parseInt(document.getElementById("horario-dia").value);
+  const hora_inicio = document.getElementById("horario-desde").value;
+  const hora_fin = document.getElementById("horario-hasta").value;
+  const duracion_minutos = parseInt(document.getElementById("horario-duracion").value) || 10;
+
+  const res = await fetch("/api/horarios-sede", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id_sede_dp, dia_semana, hora_inicio, hora_fin, duracion_minutos }),
+  });
+  const data = await res.json();
+  if (!data.success) return alert("Error: " + data.message);
+  cargarHorariosSede();
+}
+
+async function eliminarHorarioSede(id) {
+  if (!confirm("¿Eliminar este bloque de horario?")) return;
+  await fetch(`/api/horarios-sede/${id}`, { method: "DELETE" });
+  cargarHorariosSede();
+}
 
       async function cambiarEstadoCierre(id, estado) {
         try {
