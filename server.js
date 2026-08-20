@@ -740,3 +740,21 @@ app.delete("/api/horarios-sede/:id", async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 });
+app.get("/api/admin/turnos-sede", async (req, res) => {
+  const id_sede_dp = parseInt(req.query.id_sede_dp);
+  if (!id_sede_dp)
+    return res
+      .status(400)
+      .json({ status: "error", message: "Falta id_sede_dp." });
+  try {
+    const { data, error } = await supabase
+      .from("turnos")
+      .select("*")
+      .eq("id_sede_dp", id_sede_dp)
+      .order("fecha_inicio", { ascending: true });
+    if (error) throw error;
+    res.json({ status: "success", turnos: data });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
