@@ -758,3 +758,17 @@ app.get("/api/admin/turnos-sede", async (req, res) => {
     res.status(500).json({ status: "error", message: e.message });
   }
 });
+app.post('/api/admin/turnos-sede/cancelar', async (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ status: 'error', message: 'Falta id.' });
+  try {
+    const { error } = await supabase
+      .from('turnos')
+      .update({ estado: 'Cancelado' })
+      .eq('id', id);
+    if (error) throw error;
+    res.json({ status: 'success' });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
