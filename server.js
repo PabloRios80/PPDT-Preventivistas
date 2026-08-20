@@ -751,6 +751,7 @@ app.get("/api/admin/turnos-sede", async (req, res) => {
       .from("turnos")
       .select("*")
       .eq("id_sede_dp", id_sede_dp)
+      .neq("estado", "Cancelado") // <-- ÚNICA LÍNEA NUEVA
       .order("fecha_inicio", { ascending: true });
     if (error) throw error;
     res.json({ status: "success", turnos: data });
@@ -758,17 +759,18 @@ app.get("/api/admin/turnos-sede", async (req, res) => {
     res.status(500).json({ status: "error", message: e.message });
   }
 });
-app.post('/api/admin/turnos-sede/cancelar', async (req, res) => {
+app.post("/api/admin/turnos-sede/cancelar", async (req, res) => {
   const { id } = req.body;
-  if (!id) return res.status(400).json({ status: 'error', message: 'Falta id.' });
+  if (!id)
+    return res.status(400).json({ status: "error", message: "Falta id." });
   try {
     const { error } = await supabase
-      .from('turnos')
-      .update({ estado: 'Cancelado' })
-      .eq('id', id);
+      .from("turnos")
+      .update({ estado: "Cancelado" })
+      .eq("id", id);
     if (error) throw error;
-    res.json({ status: 'success' });
+    res.json({ status: "success" });
   } catch (e) {
-    res.status(500).json({ status: 'error', message: e.message });
+    res.status(500).json({ status: "error", message: e.message });
   }
 });
