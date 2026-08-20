@@ -1020,95 +1020,114 @@ if (tabHorarios) {
           }
         });
         // 6. LÓGICA DE ACCIONES (Anular, MOVER, DEVOLVER)
-        turnosTableBody.addEventListener("click", async (e) => {
-          // Acción ANULAR
-          if (e.target.classList.contains("cancel-btn")) {
-            const eventId = e.target.dataset.id;
-            if (confirm("¿Estás seguro de que quieres anular este turno?")) {
-              const response = await fetch("/api/cancelar", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ eventId: eventId }),
-              });
-              const result = await response.json();
-              if (result.status === "success") {
-                alert("Turno anulado con éxito.");
-                cargarTurnosAgendados();
-              } else {
-                alert("Error al anular el turno: " + result.message);
-              }
-            }
-          }
-
-          // Acción MOVER A FUERZAS
-          if (e.target.classList.contains("move-btn")) {
-            const idTurno = e.target.dataset.id;
-            const ciudad = window.cityActiva;
-
-            if (
-              confirm(
-                "¿Mover este turno a la agenda de Fuerzas de Seguridad?\n\nDesaparecerá de la agenda pública inmediatamente.",
-              )
-            ) {
-              e.target.disabled = true;
-              e.target.textContent = "Moviendo...";
-              try {
-                const response = await fetch("/api/admin/mover-fuerzas", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ idTurno: idTurno, city: ciudad }),
-                });
-                const result = await response.json();
-                if (result.status === "success") {
-                  alert("Turno movido con éxito.");
-                  cargarTurnosAgendados();
-                } else {
-                  alert("Error: " + result.message);
-                  e.target.disabled = false;
-                  e.target.textContent = "Reservar p/ Fuerzas";
-                }
-              } catch (err) {
-                alert("Error de conexión.");
-                e.target.disabled = false;
-                e.target.textContent = "Reservar p/ Fuerzas";
-              }
-            }
-          }
-
-          // Acción DEVOLVER A PÚBLICO
-          if (e.target.classList.contains("return-btn")) {
-            const idTurno = e.target.dataset.id;
-
-            if (
-              confirm(
-                "¿Devolver este turno a la agenda pública?\n\nCualquier afiliado podrá volver a reservarlo.",
-              )
-            ) {
-              e.target.disabled = true;
-              e.target.textContent = "Devolviendo...";
-              try {
-                const response = await fetch("/api/admin/devolver-publico", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ idTurno: idTurno }),
-                });
-                const result = await response.json();
-                if (result.status === "success") {
-                  alert("Turno devuelto con éxito.");
-                  cargarTurnosAgendados();
-                } else {
-                  alert("Error: " + result.message);
-                  e.target.disabled = false;
-                  e.target.textContent = "Devolver a Público";
-                }
-              } catch (err) {
-                alert("Error de conexión.");
-                e.target.disabled = false;
-                e.target.textContent = "Devolver a Público";
-              }
-            }
-          }
+turnosTableBody.addEventListener("click", async (e) => {
+  // Acción ANULAR (sedes nuevas en Supabase, ej. Coronda)
+  if (e.target.classList.contains("cancel-btn-sede")) {
+    const id = e.target.dataset.id;
+    if (confirm("¿Estás seguro de que quieres anular este turno?")) {
+      try {
+        const response = await fetch("/api/admin/turnos-sede/cancelar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
         });
+        const result = await response.json();
+        if (result.status === "success") {
+          alert("Turno anulado con éxito.");
+          cargarTurnosAgendados();
+        } else {
+          alert("Error al anular el turno: " + result.message);
+        }
+      } catch (err) {
+        alert("Error de conexión.");
+      }
+    }
+  }
+
+  // Acción ANULAR (Apps Script, Santa Fe/Rosario/Fuerzas)
+  if (e.target.classList.contains("cancel-btn")) {
+    const eventId = e.target.dataset.id;
+    if (confirm("¿Estás seguro de que quieres anular este turno?")) {
+      const response = await fetch("/api/cancelar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: eventId }),
+      });
+      const result = await response.json();
+      if (result.status === "success") {
+        alert("Turno anulado con éxito.");
+        cargarTurnosAgendados();
+      } else {
+        alert("Error al anular el turno: " + result.message);
+      }
+    }
+  }
+  // Acción MOVER A FUERZAS
+  if (e.target.classList.contains("move-btn")) {
+    const idTurno = e.target.dataset.id;
+    const ciudad = window.cityActiva;
+    if (
+      confirm(
+        "¿Mover este turno a la agenda de Fuerzas de Seguridad?\n\nDesaparecerá de la agenda pública inmediatamente.",
+      )
+    ) {
+      e.target.disabled = true;
+      e.target.textContent = "Moviendo...";
+      try {
+        const response = await fetch("/api/admin/mover-fuerzas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idTurno: idTurno, city: ciudad }),
+        });
+        const result = await response.json();
+        if (result.status === "success") {
+          alert("Turno movido con éxito.");
+          cargarTurnosAgendados();
+        } else {
+          alert("Error: " + result.message);
+          e.target.disabled = false;
+          e.target.textContent = "Reservar p/ Fuerzas";
+        }
+      } catch (err) {
+        alert("Error de conexión.");
+        e.target.disabled = false;
+        e.target.textContent = "Reservar p/ Fuerzas";
+      }
+    }
+  }
+  // Acción DEVOLVER A PÚBLICO
+  if (e.target.classList.contains("return-btn")) {
+    const idTurno = e.target.dataset.id;
+    if (
+      confirm(
+        "¿Devolver este turno a la agenda pública?\n\nCualquier afiliado podrá volver a reservarlo.",
+      )
+    ) {
+      e.target.disabled = true;
+      e.target.textContent = "Devolviendo...";
+      try {
+        const response = await fetch("/api/admin/devolver-publico", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idTurno: idTurno }),
+        });
+        const result = await response.json();
+        if (result.status === "success") {
+          alert("Turno devuelto con éxito.");
+          cargarTurnosAgendados();
+        } else {
+          alert("Error: " + result.message);
+          e.target.disabled = false;
+          e.target.textContent = "Devolver a Público";
+        }
+      } catch (err) {
+        alert("Error de conexión.");
+        e.target.disabled = false;
+        e.target.textContent = "Devolver a Público";
+      }
+    }
+  }
+});
 
         btnBloquear.addEventListener("click", async () => {
           const dateToBlock = fechaInput.value;
