@@ -774,3 +774,16 @@ app.post("/api/admin/turnos-sede/cancelar", async (req, res) => {
     res.status(500).json({ status: "error", message: e.message });
   }
 });
+app.get('/api/mi-sede/:id', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('sedes_dp')
+      .select('id, nombre, ciudad')
+      .eq('id', req.params.id)
+      .single();
+    if (error || !data) return res.status(404).json({ success: false });
+    res.json({ success: true, sede: data });
+  } catch (e) {
+    res.status(500).json({ success: false });
+  }
+});

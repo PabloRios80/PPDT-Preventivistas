@@ -739,6 +739,29 @@ if (payload && !payload.es_superuser) {
 
 actualizarLabelsCiudad(window.cityActiva);
 
+// Mostrar el nombre real de la sede en el box, independiente de si tiene turnera Apps Script
+if (payload && !payload.es_superuser && payload.id_sede_dp) {
+  fetch(`/api/mi-sede/${payload.id_sede_dp}`)
+    .then((r) => r.json())
+    .then((data) => {
+      if (data.success) {
+        const labelSede = document.querySelector('label[for="city-select"]')?.nextElementSibling || citySelect;
+        // Reemplazamos visualmente el select por el nombre real de la sede
+        citySelect.style.display = "none";
+        const spanSede = document.createElement("span");
+        spanSede.textContent = data.sede.nombre;
+        spanSede.style.cssText = "font-weight:bold; color:#014189; padding:8px 12px; border:1px solid #ccc; border-radius:6px; background:#f9fafb;";
+        citySelect.parentNode.insertBefore(spanSede, citySelect.nextSibling);
+      }
+      if (ciudadGuardada === "sin_configurar") {
+      document.getElementById("tab-agregar")?.style.setProperty("display", "none");
+      }
+      if (ciudadGuardada === "sin_configurar") {
+      document.getElementById("tab-derivaciones")?.style.setProperty("display", "none");
+      }
+    });
+}
+
 citySelect.addEventListener("change", (e) => {
   window.cityActiva = e.target.value;
   localStorage.setItem("admin-ciudad-preferida", window.cityActiva);
