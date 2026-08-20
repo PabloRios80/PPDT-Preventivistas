@@ -963,86 +963,132 @@ if (tabHorarios) {
               '<tr><td colspan="6" style="text-align:center;">Error al cargar las derivaciones.</td></tr>';
           }
         }
-
-        async function cargarDiasBloqueados() {
+async function cargarDiasBloqueados() {
   listaDiasBloqueados.innerHTML = "<li>Cargando...</li>";
   const ciudad = window.cityActiva;
+
   if (ciudad === "sin_configurar") {
-    listaDiasBloqueados.innerHTML =
-      "<li>Tu sede todavía no tiene turnera pública configurada.</li>";
+    const idSedeReal = window.dpPayload?.id_sede_dp;
+    if (!idSedeReal) {
+      listaDiasBloqueados.innerHTML = "<li>No se pudo determinar tu sede.</li>";
+      return;
+    }
+    try {
+      const response = await fetch(`/api/dias-bloqueados-sede?id_sede_dp=${idSedeReal}`);
+      const result = await response.json();
+      if (result.success && result.dias.length > 0) {
+        listaDiasBloqueados.innerHTML = result.dias
+          .map((d) => {
+            const [year, month, day] = d.fecha.split("-");
+            const fechaFormateada = new Date(year, month - 1, day).toLocaleDateString(
+              "es-AR",
+              { dateStyle: "full" },
+            );
+            return `<li style="display: flex; justify-content: space-between; align-items: center;">
+                      <span>${fechaFormateada}</span>
+                      <button class="btn-desbloquear-sede" data-id="${d.id}" style="background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.8em; margin-left: 10px;">
+                        Desbloquear
+                      </button>
+                    </li>`;
+          })
+          .join("");
+      } else {
+        listaDiasBloqueados.innerHTML = "<li>No hay días bloqueados manualmente.</li>";
+      }
+    } catch (e) {
+      listaDiasBloqueados.innerHTML = "<li>Error al cargar los días bloqueados.</li>";
+    }
     return;
   }
-  const response = await fetch(
-    `/api/admin/dias-bloqueados?city=${ciudad}`,
-  );
+
+  const response = await fetch(`/api/admin/dias-bloqueados?city=${ciudad}`);
   const result = await response.json();
+  if (result.status === "success") {
+    listaDiasBloqueados.innerHTML = "";
+    if (result.blocked_dates.length > 0) {
+      result.blocked_dates.forEach((date) => {
+        const [year, month, day] = date.split("-");
+        const fechaObjeto = new Date(year, month - 1, day);
+        const fechaFormateada = fechaObjeto.toLocaleDateString("es-AR", { dateStyle: "full" });
+        listaDiasBloqueados.innerHTML += `
+                        <li style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>${fechaFormateada}</span>
+                            <button class="btn-desbloquear" data-date="${date}" style="background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.8em; margin-left: 10px;">
+                                Desbloquear
+                            </button>
+                        </li>`;
+      });
+    } else {
+      listaDiasBloqueados.innerHTML = "<li>No hay días bloqueados manualmente.</li>";
+    }
+  }
+}
 
-          if (result.status === "success") {
-            listaDiasBloqueados.innerHTML = "";
-            if (result.blocked_dates.length > 0) {
-              result.blocked_dates.forEach((date) => {
-                const [year, month, day] = date.split("-");
-                const fechaObjeto = new Date(year, month - 1, day);
-                const fechaFormateada = fechaObjeto.toLocaleDateString(
-                  "es-AR",
-                  { dateStyle: "full" },
-                );
-                listaDiasBloqueados.innerHTML += `
-                                <li style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span>${fechaFormateada}</span>
-                                    <button class="btn-desbloquear" data-date="${date}" style="background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.8em; margin-left: 10px;">
-                                        Desbloquear
-                                    </button>
-                                </li>`;
-              });
-            } else {
-              listaDiasBloqueados.innerHTML =
-                "<li>No hay días bloqueados manualmente.</li>";
-            }
-          }
+listaDiasBloqueados.addEventListener("click", async (e) => {
+  // Desbloquear (sedes nuevas en Supabase)
+  if (e.target.classList.contains("btn-desbloquear-sede")) {
+    const id = e.target.dataset.id;
+    if (confirm("¿Quieres desbloquear este día?")) {
+      const originalText = e.target.textContent;
+      e.target.disabled = true;
+      e.target.textContent = "Procesando...";
+      try {
+        const response = await fetch(`/api/dias-bloqueados-sede/${id}`, { method: "DELETE" });
+        const result = await response.json();
+        if (result.success) {
+          alert("Día desbloqueado correctamente.");
+          cargarDiasBloqueados();
+          cargarTurnosAgendados();
+        } else {
+          alert("Error: " + result.message);
+          e.target.disabled = false;
+          e.target.textContent = originalText;
         }
+      } catch (error) {
+        alert("Error de conexión.");
+        e.target.disabled = false;
+        e.target.textContent = originalText;
+      }
+    }
+    return;
+  }
 
-        listaDiasBloqueados.addEventListener("click", async (e) => {
-          if (e.target.classList.contains("btn-desbloquear")) {
-            const dateToUnblock = e.target.dataset.date;
-            const ciudad = window.cityActiva;
-
-            if (
-              confirm(
-                `¿Quieres desbloquear el día ${dateToUnblock}? \n\nEl sistema intentará regenerar los turnos para ese día automáticamente.`,
-              )
-            ) {
-              const originalText = e.target.textContent;
-              e.target.disabled = true;
-              e.target.textContent = "Procesando...";
-
-              try {
-                const response = await fetch("/api/admin/desbloquear-dia", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ date: dateToUnblock, city: ciudad }),
-                });
-                const result = await response.json();
-
-                if (result.status === "success") {
-                  alert(
-                    "Día desbloqueado correctamente.\nLos turnos han sido regenerados.",
-                  );
-                  cargarDiasBloqueados();
-                  cargarTurnosAgendados();
-                } else {
-                  alert("Error: " + result.message);
-                  e.target.disabled = false;
-                  e.target.textContent = originalText;
-                }
-              } catch (error) {
-                alert("Error de conexión.");
-                e.target.disabled = false;
-                e.target.textContent = originalText;
-              }
-            }
-          }
+  // Desbloquear (Apps Script, Santa Fe/Rosario/Fuerzas)
+  if (e.target.classList.contains("btn-desbloquear")) {
+    const dateToUnblock = e.target.dataset.date;
+    const ciudad = window.cityActiva;
+    if (
+      confirm(
+        `¿Quieres desbloquear el día ${dateToUnblock}? \n\nEl sistema intentará regenerar los turnos para ese día automáticamente.`,
+      )
+    ) {
+      const originalText = e.target.textContent;
+      e.target.disabled = true;
+      e.target.textContent = "Procesando...";
+      try {
+        const response = await fetch("/api/admin/desbloquear-dia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: dateToUnblock, city: ciudad }),
         });
+        const result = await response.json();
+        if (result.status === "success") {
+          alert("Día desbloqueado correctamente.\nLos turnos han sido regenerados.");
+          cargarDiasBloqueados();
+          cargarTurnosAgendados();
+        } else {
+          alert("Error: " + result.message);
+          e.target.disabled = false;
+          e.target.textContent = originalText;
+        }
+      } catch (error) {
+        alert("Error de conexión.");
+        e.target.disabled = false;
+        e.target.textContent = originalText;
+      }
+    }
+  }
+});
         // 6. LÓGICA DE ACCIONES (Anular, MOVER, DEVOLVER)
 turnosTableBody.addEventListener("click", async (e) => {
   // Acción ANULAR (sedes nuevas en Supabase, ej. Coronda)
@@ -1152,34 +1198,66 @@ turnosTableBody.addEventListener("click", async (e) => {
     }
   }
 });
+btnBloquear.addEventListener("click", async () => {
+  const dateToBlock = fechaInput.value;
+  if (!dateToBlock) {
+    alert("Por favor, selecciona una fecha.");
+    return;
+  }
+  const ciudad = window.cityActiva;
 
-        btnBloquear.addEventListener("click", async () => {
-          const dateToBlock = fechaInput.value;
-          if (!dateToBlock) {
-            alert("Por favor, selecciona una fecha.");
-            return;
-          }
-          const ciudad = window.cityActiva;
-          if (
-            confirm(
-              `¿Estás seguro de que quieres bloquear el día ${dateToBlock} en la sede ${ciudad.toUpperCase()}?`,
-            )
-          ) {
-            btnBloquear.disabled = true;
-            btnBloquear.textContent = "Bloqueando...";
-            const response = await fetch("/api/admin/bloquear-dia", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ date: dateToBlock, city: ciudad }),
-            });
-            const result = await response.json();
-            alert(result.message);
-            btnBloquear.disabled = false;
-            btnBloquear.textContent = "Bloquear Día";
-            cargarDiasBloqueados();
-            cargarTurnosAgendados();
-          }
+  if (ciudad === "sin_configurar") {
+    const idSedeReal = window.dpPayload?.id_sede_dp;
+    if (!idSedeReal) {
+      alert("No se pudo determinar tu sede.");
+      return;
+    }
+    if (
+      confirm(
+        `¿Estás seguro de que quieres bloquear el día ${dateToBlock} en tu sede?`,
+      )
+    ) {
+      btnBloquear.disabled = true;
+      btnBloquear.textContent = "Bloqueando...";
+      try {
+        const response = await fetch("/api/dias-bloqueados-sede", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id_sede_dp: idSedeReal, fecha: dateToBlock }),
         });
+        const result = await response.json();
+        alert(result.success ? "Día bloqueado con éxito." : "Error: " + result.message);
+      } catch (e) {
+        alert("Error de conexión.");
+      }
+      btnBloquear.disabled = false;
+      btnBloquear.textContent = "Bloquear Día";
+      cargarDiasBloqueados();
+      cargarTurnosAgendados();
+    }
+    return;
+  }
+
+  if (
+    confirm(
+      `¿Estás seguro de que quieres bloquear el día ${dateToBlock} en la sede ${ciudad.toUpperCase()}?`,
+    )
+  ) {
+    btnBloquear.disabled = true;
+    btnBloquear.textContent = "Bloqueando...";
+    const response = await fetch("/api/admin/bloquear-dia", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: dateToBlock, city: ciudad }),
+    });
+    const result = await response.json();
+    alert(result.message);
+    btnBloquear.disabled = false;
+    btnBloquear.textContent = "Bloquear Día";
+    cargarDiasBloqueados();
+    cargarTurnosAgendados();
+  }
+});
         // LÓGICA: GENERAR TURNOS MASIVOS
         const btnGenerarExtra = document.getElementById("btn-generar-extra");
         if (btnGenerarExtra) {

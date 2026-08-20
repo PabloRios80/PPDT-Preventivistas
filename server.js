@@ -787,3 +787,39 @@ app.get('/api/mi-sede/:id', async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+app.get('/api/dias-bloqueados-sede', async (req, res) => {
+  const id_sede_dp = parseInt(req.query.id_sede_dp);
+  if (!id_sede_dp) return res.status(400).json({ success: false, message: 'Falta id_sede_dp.' });
+  try {
+    const { data, error } = await supabase
+      .from('dias_bloqueados_sede')
+      .select('*')
+      .eq('id_sede_dp', id_sede_dp)
+      .order('fecha', { ascending: true });
+    if (error) throw error;
+    res.json({ success: true, dias: data });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post('/api/dias-bloqueados-sede', async (req, res) => {
+  const { id_sede_dp, fecha, motivo } = req.body;
+  if (!id_sede_dp || !fecha) return res.status(400).json({ success: false, message: 'Faltan datos.' });
+  try {
+    const { error } = await supabase.from('dias_bloqueados_sede').insert({ id_sede_dp, fecha, motivo });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.delete('/api/dias-bloqueados-sede/:id', async (req, res) => {
+  try {
+    await supabase.from('dias_bloqueados_sede').delete().eq('id', req.params.id);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
