@@ -739,8 +739,8 @@ if (payload && !payload.es_superuser) {
 
 actualizarLabelsCiudad(window.cityActiva);
 
-// Ocultar pestañas que no aplican a sedes sin turnera Apps Script (independiente del fetch de abajo)
-if (ciudadGuardada === "sin_configurar") {
+// Ocultar pestañas que no aplican a sedes sin turnera Apps Script
+if (window.cityActiva === "sin_configurar") {
   document.getElementById("tab-agregar")?.style.setProperty("display", "none");
   document.getElementById("tab-derivaciones")?.style.setProperty("display", "none");
 }
