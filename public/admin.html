@@ -794,110 +794,126 @@ if (tabHorarios) {
             "https://acceso.diapreventivoiapos.com/login.html";
         });
         // 5. FUNCIONES PARA CARGAR DATOS
-        async function cargarTurnosAgendados() {
+       async function cargarTurnosAgendados() {
   turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
   const ciudad = window.cityActiva;
+
   if (ciudad === "sin_configurar") {
-    turnosTableBody.innerHTML =
-      '<tr><td colspan="6" style="text-align:center;">Tu sede todavía no tiene turnera pública configurada.</td></tr>';
+    const idSedeReal = window.dpPayload?.id_sede_dp;
+    if (!idSedeReal) {
+      turnosTableBody.innerHTML =
+        '<tr><td colspan="6" style="text-align:center;">Tu sede todavía no tiene turnera pública configurada.</td></tr>';
+      return;
+    }
+    try {
+      const response = await fetch(`/api/admin/turnos-sede?id_sede_dp=${idSedeReal}`);
+      const data = await response.json();
+      if (data.status === "success" && data.turnos.length > 0) {
+        turnosTableBody.innerHTML = data.turnos
+          .map((turno) => {
+            const fecha = new Date(turno.fecha_inicio).toLocaleString("es-AR", {
+              dateStyle: "short",
+              timeStyle: "short",
+            });
+            return `<tr data-date="${turno.fecha_inicio}">
+                      <td>${fecha} hs</td>
+                      <td>${turno.apellido}, ${turno.nombre}</td>
+                      <td>${turno.dni}</td>
+                      <td>${turno.email || ""}</td>
+                      <td>${turno.telefono || ""}</td>
+                      <td><button class="cancel-btn-sede" data-id="${turno.id}">Anular</button></td>
+                    </tr>`;
+          })
+          .join("");
+      } else {
+        turnosTableBody.innerHTML =
+          '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados en esta sede.</td></tr>';
+      }
+    } catch (error) {
+      turnosTableBody.innerHTML =
+        '<tr><td colspan="6" style="text-align:center;">Error al cargar los turnos.</td></tr>';
+    }
     return;
   }
+
   try {
-            const response = await fetch(`/api/admin/turnos?city=${ciudad}`);
-            const data = await response.json();
-            if (data.status === "success" && data.appointments.length > 0) {
-              let html = "";
-              data.appointments.forEach((turno) => {
-                const fecha = new Date(turno.fechaInicio).toLocaleString(
-                  "es-AR",
-                  { dateStyle: "short", timeStyle: "short" },
-                );
-                if (turno.estado === "Disponible") {
-                  if (!turno.esFuerza) {
-                    // <--- CAMBIO CLAVE AQUÍ: Miramos si el turno es de fuerzas o no
-                    // Turnos libres en la agenda pública (Santa Fe / Rosario)
-                    html += `<tr data-date="${turno.fechaInicio}" style="background-color: #f8f9fa;">
-                                        <td>${fecha} hs</td>
-                                        <td colspan="4" style="color: #6c757d; font-style: italic;">Turno Libre (Público)</td>
-                                        <td><button class="action-button btn-green move-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Reservar p/ Fuerzas</button></td>
-                                    </tr>`;
-                  } else {
-                    // Turnos libres en la agenda de Fuerzas (Con botón para devolverlos)
-                    html += `<tr data-date="${turno.fechaInicio}" style="background-color: #e6f2ff;">
-                                        <td>${fecha} hs</td>
-                                        <td colspan="4" style="color: #005A9C; font-weight: bold;">Turno Reservado para Fuerzas (Libre)</td>
-                                        <td><button class="action-button btn-gray return-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Devolver a Público</button></td>
-                                    </tr>`;
-                  }
-                } else {
-                  // Turnos Ocupados
-
-                  // 1. Creamos la etiqueta FDS y el color de fondo si es de Fuerzas
-                  const etiquetaFDS = turno.esFuerza
-                    ? '<span style="background-color: #005A9C; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 10px;">FDS</span>'
-                    : "";
-
-                  // Si es de fuerzas, pintamos la fila de un celeste muy suave, si no, sin fondo
-                  const fondoFila = turno.esFuerza
-                    ? "background-color: #e6f2ff;"
-                    : "";
-
-                  // 2. Dibujamos la fila inyectando el color de fondo y la etiqueta FDS
-                  html += `<tr id="turno-${turno.idEvento ? turno.idEvento.replace(/@/g, "-") : ""}" data-date="${turno.fechaInicio}" style="${fondoFila}">
-                                    <td>${fecha} hs</td>
-                                    <td>${turno.apellido}, ${turno.nombre}</td>
-                                    <td>${turno.dni}</td>
-                                    <td>${turno.email || ""}</td>
-                                    <td>${turno.telefono}</td>
-                                    <td>
-                                        <div style="display: flex; align-items: center;">
-                                            ${etiquetaFDS}
-                                            <button class="cancel-btn" data-id="${turno.idEvento || turno.idTurno}">Anular</button>
-                                        </div>
-                                    </td>
-                                </tr>`;
-                }
-              });
-              turnosTableBody.innerHTML = html;
-
-              // Scroll Automático a "Hoy"
-              setTimeout(() => {
-                const hoy = new Date();
-                hoy.setHours(0, 0, 0, 0);
-
-                const filas = turnosTableBody.querySelectorAll("tr[data-date]");
-                let filaDestino = null;
-
-                for (let fila of filas) {
-                  const fechaTurno = new Date(fila.getAttribute("data-date"));
-                  if (fechaTurno >= hoy) {
-                    filaDestino = fila;
-                    break;
-                  }
-                }
-
-                if (filaDestino) {
-                  filaDestino.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                  const colorOriginal = filaDestino.style.backgroundColor || "";
-                  filaDestino.style.backgroundColor = "#e6ffed";
-                  setTimeout(() => {
-                    filaDestino.style.backgroundColor = colorOriginal;
-                    filaDestino.style.transition = "background-color 1.5s ease";
-                  }, 3000);
-                }
-              }, 300);
-            } else {
-              turnosTableBody.innerHTML =
-                '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados en esta sede.</td></tr>';
-            }
-          } catch (error) {
-            turnosTableBody.innerHTML =
-              '<tr><td colspan="6" style="text-align:center;">Error al cargar los turnos.</td></tr>';
+    const response = await fetch(`/api/admin/turnos?city=${ciudad}`);
+    const data = await response.json();
+    if (data.status === "success" && data.appointments.length > 0) {
+      let html = "";
+      data.appointments.forEach((turno) => {
+        const fecha = new Date(turno.fechaInicio).toLocaleString(
+          "es-AR",
+          { dateStyle: "short", timeStyle: "short" },
+        );
+        if (turno.estado === "Disponible") {
+          if (!turno.esFuerza) {
+            html += `<tr data-date="${turno.fechaInicio}" style="background-color: #f8f9fa;">
+                                <td>${fecha} hs</td>
+                                <td colspan="4" style="color: #6c757d; font-style: italic;">Turno Libre (Público)</td>
+                                <td><button class="action-button btn-green move-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Reservar p/ Fuerzas</button></td>
+                            </tr>`;
+          } else {
+            html += `<tr data-date="${turno.fechaInicio}" style="background-color: #e6f2ff;">
+                                <td>${fecha} hs</td>
+                                <td colspan="4" style="color: #005A9C; font-weight: bold;">Turno Reservado para Fuerzas (Libre)</td>
+                                <td><button class="action-button btn-gray return-btn" data-id="${turno.idTurno}" style="padding: 5px 10px; font-size: 0.9em;">Devolver a Público</button></td>
+                            </tr>`;
+          }
+        } else {
+          const etiquetaFDS = turno.esFuerza
+            ? '<span style="background-color: #005A9C; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 10px;">FDS</span>'
+            : "";
+          const fondoFila = turno.esFuerza
+            ? "background-color: #e6f2ff;"
+            : "";
+          html += `<tr id="turno-${turno.idEvento ? turno.idEvento.replace(/@/g, "-") : ""}" data-date="${turno.fechaInicio}" style="${fondoFila}">
+                            <td>${fecha} hs</td>
+                            <td>${turno.apellido}, ${turno.nombre}</td>
+                            <td>${turno.dni}</td>
+                            <td>${turno.email || ""}</td>
+                            <td>${turno.telefono}</td>
+                            <td>
+                                <div style="display: flex; align-items: center;">
+                                    ${etiquetaFDS}
+                                    <button class="cancel-btn" data-id="${turno.idEvento || turno.idTurno}">Anular</button>
+                                </div>
+                            </td>
+                        </tr>`;
+        }
+      });
+      turnosTableBody.innerHTML = html;
+      setTimeout(() => {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const filas = turnosTableBody.querySelectorAll("tr[data-date]");
+        let filaDestino = null;
+        for (let fila of filas) {
+          const fechaTurno = new Date(fila.getAttribute("data-date"));
+          if (fechaTurno >= hoy) {
+            filaDestino = fila;
+            break;
           }
         }
+        if (filaDestino) {
+          filaDestino.scrollIntoView({ behavior: "smooth", block: "center" });
+          const colorOriginal = filaDestino.style.backgroundColor || "";
+          filaDestino.style.backgroundColor = "#e6ffed";
+          setTimeout(() => {
+            filaDestino.style.backgroundColor = colorOriginal;
+            filaDestino.style.transition = "background-color 1.5s ease";
+          }, 3000);
+        }
+      }, 300);
+    } else {
+      turnosTableBody.innerHTML =
+        '<tr><td colspan="6" style="text-align:center;">No hay turnos agendados en esta sede.</td></tr>';
+    }
+  } catch (error) {
+    turnosTableBody.innerHTML =
+      '<tr><td colspan="6" style="text-align:center;">Error al cargar los turnos.</td></tr>';
+  }
+}
 
         async function cargarDerivaciones() {
           derivacionesTableBody.innerHTML =
