@@ -747,11 +747,25 @@ app.get("/api/admin/turnos-sede", async (req, res) => {
       .status(400)
       .json({ status: "error", message: "Falta id_sede_dp." });
   try {
+    // Por defecto, solo la última semana hacia atrás y hasta 2 meses hacia
+    // adelante — traer todo el historial es lento y no sirve para la
+    // gestión del día a día. Se puede pedir un rango específico (para ver
+    // historial viejo) con ?desde=&hasta=.
+    const hoy = new Date();
+    const desde = req.query.desde
+      ? new Date(req.query.desde)
+      : new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const hasta = req.query.hasta
+      ? new Date(req.query.hasta)
+      : new Date(hoy.getTime() + 62 * 24 * 60 * 60 * 1000);
+
     const { data, error } = await supabase
       .from("turnos")
       .select("*")
       .eq("id_sede_dp", id_sede_dp)
-      .neq("estado", "Cancelado") // <-- ÚNICA LÍNEA NUEVA
+      .neq("estado", "Cancelado")
+      .gte("fecha_inicio", desde.toISOString())
+      .lte("fecha_inicio", hasta.toISOString())
       .order("fecha_inicio", { ascending: true });
     if (error) throw error;
     res.json({ status: "success", turnos: data });

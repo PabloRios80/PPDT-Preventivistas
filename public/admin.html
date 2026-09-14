@@ -727,6 +727,8 @@ const MAPA_SEDE_A_CITY = { 1: "santafe", 3: "rosario" };
 const payload = window.dpPayload;
 
 window.cityActiva = null; // esta es la que van a usar los fetch, no citySelect.value
+window.idSedeParaVerSuperuser = null; // qué sede puntual eligió ver el superuser (Delta, Coronda, etc.)
+window.nombresSedesSuperuser = {}; // id -> nombre, para las etiquetas
 
 if (payload && !payload.es_superuser) {
   window.cityActiva = MAPA_SEDE_A_CITY[payload.id_sede_dp] || "sin_configurar";
@@ -734,6 +736,34 @@ if (payload && !payload.es_superuser) {
 } else {
   window.cityActiva = localStorage.getItem("admin-ciudad-preferida") || "santafe";
   citySelect.value = window.cityActiva;
+
+  // Superuser: agregar una opción por cada sede nueva (Delta, Coronda,
+  // etc. — las que no sean Santa Fe/Rosario, ya cubiertas arriba), para
+  // poder elegirlas puntualmente en vez de solo ver "santafe" por defecto.
+  fetch("/api/sedes-cierre")
+    .then((r) => r.json())
+    .then((data) => {
+      (data.sedes || [])
+        .filter((s) => s.id !== 1 && s.id !== 3)
+        .forEach((s) => {
+          window.nombresSedesSuperuser[s.id] = `${s.nombre} (${s.ciudad})`;
+          const opt = document.createElement("option");
+          opt.value = `sede-${s.id}`;
+          opt.textContent = `${s.nombre} (${s.ciudad})`;
+          citySelect.appendChild(opt);
+        });
+      // Si la preferencia guardada era una de estas sedes, restaurarla ahora
+      // que ya existe la opción en el <select>.
+      const guardada = localStorage.getItem("admin-ciudad-preferida");
+      if (guardada && guardada.startsWith("sede-")) {
+        citySelect.value = guardada;
+        window.cityActiva = "sin_configurar";
+        window.idSedeParaVerSuperuser = parseInt(guardada.replace("sede-", ""));
+        actualizarLabelsCiudad(guardada);
+        recargarDatos();
+      }
+    })
+    .catch((err) => console.error("Error cargando sedes:", err));
 }
 
 actualizarLabelsCiudad(window.cityActiva);
@@ -764,16 +794,26 @@ if (payload && !payload.es_superuser && payload.id_sede_dp) {
 }
 
 citySelect.addEventListener("change", (e) => {
-  window.cityActiva = e.target.value;
-  localStorage.setItem("admin-ciudad-preferida", window.cityActiva);
-  actualizarLabelsCiudad(window.cityActiva);
+  const valor = e.target.value;
+  if (valor.startsWith("sede-")) {
+    window.cityActiva = "sin_configurar";
+    window.idSedeParaVerSuperuser = parseInt(valor.replace("sede-", ""));
+  } else {
+    window.cityActiva = valor;
+    window.idSedeParaVerSuperuser = null;
+  }
+  localStorage.setItem("admin-ciudad-preferida", valor);
+  actualizarLabelsCiudad(valor);
   recargarDatos();
 });
 
 function actualizarLabelsCiudad(ciudad) {
   let nombreCiudad = "Santa Fe";
   if (ciudad === "rosario") nombreCiudad = "Rosario";
-  if (ciudad === "fuerzas") nombreCiudad = "Fuerzas de Seguridad";
+  if (ciudad.startsWith("sede-")) {
+    const id = ciudad.replace("sede-", "");
+    nombreCiudad = window.nombresSedesSuperuser[id] || "Sede";
+  } else if (ciudad === "fuerzas") nombreCiudad = "Fuerzas de Seguridad";
   if (ciudad === "sin_configurar") nombreCiudad = "Tu sede (turnera aún no configurada)";
   ciudadLabels.forEach((span) => (span.textContent = nombreCiudad));
 }
@@ -823,7 +863,7 @@ if (tabHorarios) {
   const ciudad = window.cityActiva;
 
   if (ciudad === "sin_configurar") {
-    const idSedeReal = window.dpPayload?.id_sede_dp;
+    const idSedeReal = window.idSedeParaVerSuperuser || window.dpPayload?.id_sede_dp;
     if (!idSedeReal) {
       turnosTableBody.innerHTML =
         '<tr><td colspan="6" style="text-align:center;">Tu sede todavía no tiene turnera pública configurada.</td></tr>';
@@ -968,7 +1008,7 @@ async function cargarDiasBloqueados() {
   const ciudad = window.cityActiva;
 
   if (ciudad === "sin_configurar") {
-    const idSedeReal = window.dpPayload?.id_sede_dp;
+    const idSedeReal = window.idSedeParaVerSuperuser || window.dpPayload?.id_sede_dp;
     if (!idSedeReal) {
       listaDiasBloqueados.innerHTML = "<li>No se pudo determinar tu sede.</li>";
       return;
@@ -1207,7 +1247,7 @@ btnBloquear.addEventListener("click", async () => {
   const ciudad = window.cityActiva;
 
   if (ciudad === "sin_configurar") {
-    const idSedeReal = window.dpPayload?.id_sede_dp;
+    const idSedeReal = window.idSedeParaVerSuperuser || window.dpPayload?.id_sede_dp;
     if (!idSedeReal) {
       alert("No se pudo determinar tu sede.");
       return;
