@@ -456,11 +456,12 @@
                 <th>Médico</th>
                 <th>Estado</th>
                 <th>Acciones</th>
+                <th>Chat interno</th>
               </tr>
             </thead>
             <tbody id="tbody-cierre">
               <tr>
-                <td colspan="6" style="text-align: center; color: #999">
+                <td colspan="7" style="text-align: center; color: #999">
                   Seleccioná fecha para ver la agenda.
                 </td>
               </tr>
@@ -1380,7 +1381,7 @@ btnBloquear.addEventListener("click", async () => {
         const tbody = document.getElementById("tbody-cierre");
 
         tbody.innerHTML =
-          '<tr><td colspan="6" style="text-align:center;">Cargando...</td></tr>';
+          '<tr><td colspan="7" style="text-align:center;">Cargando...</td></tr>';
 
         try {
           let url = `/api/agenda-cierre?fecha=${fecha}`;
@@ -1392,7 +1393,7 @@ btnBloquear.addEventListener("click", async () => {
 
           if (turnos.length === 0) {
             tbody.innerHTML =
-              '<tr><td colspan="6" style="text-align:center; color:#999;">No hay turnos para esta fecha.</td></tr>';
+              '<tr><td colspan="7" style="text-align:center; color:#999;">No hay turnos para esta fecha.</td></tr>';
             return;
           }
 
@@ -1436,12 +1437,66 @@ btnBloquear.addEventListener("click", async () => {
                         Eliminar
                     </button>
                 </td>
+                <td style="min-width:220px;">
+                    <div id="chat-cierre-${t.id}" style="max-height:110px; overflow-y:auto; font-size:0.8em; margin-bottom:4px;">
+                        ${
+                          (t.chat_interno || [])
+                            .map(
+                              (m) => `
+                            <div style="margin-bottom:3px;">
+                                <strong style="color:${m.rol === "medico" ? "#005A9C" : "#009A44"};">${m.rol === "medico" ? "Médico" : "PV"} (${m.autor || ""}):</strong>
+                                ${(m.texto || "").replace(/</g, "&lt;")}
+                            </div>`,
+                            )
+                            .join("") ||
+                          '<span style="color:#999;">Sin mensajes.</span>'
+                        }
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <input id="chat-input-${t.id}" type="text" placeholder="Mensaje para el médico..."
+                            style="flex:1; font-size:0.8em; padding:4px;">
+                        <button onclick="enviarChatCierre(${t.id})"
+                            style="background:#005A9C; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8em;">
+                            Enviar
+                        </button>
+                    </div>
+                </td>
             </tr>`,
             )
             .join("");
         } catch (e) {
           tbody.innerHTML =
-            '<tr><td colspan="6" style="text-align:center; color:red;">Error al cargar.</td></tr>';
+            '<tr><td colspan="7" style="text-align:center; color:red;">Error al cargar.</td></tr>';
+        }
+      }
+
+      async function enviarChatCierre(id) {
+        const input = document.getElementById(`chat-input-${id}`);
+        const texto = input.value.trim();
+        if (!texto) return;
+        try {
+          const res = await fetch(`/api/agenda-cierre?fecha=${document.getElementById("cierre-fecha")?.value || ""}`);
+          const data = await res.json();
+          const turno = (data.turnos || []).find((t) => t.id === id);
+          const logActual = Array.isArray(turno?.chat_interno) ? turno.chat_interno : [];
+          const nuevoLog = [
+            ...logActual,
+            {
+              rol: "pv",
+              autor: window.dpPayload?.nombre || "",
+              texto,
+              fecha: new Date().toISOString(),
+            },
+          ];
+          await fetch(`/api/agenda-cierre/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_interno: nuevoLog }),
+          });
+          input.value = "";
+          cargarAgendaCierre();
+        } catch (e) {
+          alert("No se pudo enviar el mensaje.");
         }
       }
 
