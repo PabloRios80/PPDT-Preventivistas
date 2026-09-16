@@ -8,6 +8,10 @@
       rel="stylesheet"
     />
     <style>
+      @keyframes parpadeo {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.35; }
+      }
       body {
         font-family: "Roboto", sans-serif;
         margin: 0;
@@ -1436,11 +1440,27 @@ btnBloquear.addEventListener("click", async () => {
                     </button>
                 </td>
                 <td style="text-align:center;">
+                    ${(() => {
+                      const log = t.chat_interno || [];
+                      const ultimo = log[log.length - 1];
+                      let color = "#ccc";
+                      let titulo = "Sin mensajes";
+                      let pulso = "";
+                      if (ultimo && ultimo.rol === "medico") {
+                        color = "#dc3545";
+                        titulo = "Mensaje del médico sin responder";
+                        pulso = "animation:parpadeo 1.5s infinite;";
+                      } else if (ultimo) {
+                        color = "#005A9C";
+                        titulo = "Esperando respuesta del médico";
+                      }
+                      return `
                     <button onclick="abrirChatCierre(${t.id})"
                         style="background:none; border:none; cursor:pointer; padding:4px;"
-                        title="${(t.chat_interno && t.chat_interno.length) ? t.chat_interno.length + " mensaje(s)" : "Sin mensajes"}">
-                        <span style="font-size:1.2em; color:${(t.chat_interno && t.chat_interno.length) ? "#005A9C" : "#ccc"};">💬</span>
-                    </button>
+                        title="${titulo}">
+                        <span style="font-size:1.2em; color:${color}; ${pulso}">💬</span>
+                    </button>`;
+                    })()}
                 </td>
             </tr>`,
             )
