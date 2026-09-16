@@ -456,7 +456,7 @@
                 <th>Médico</th>
                 <th>Estado</th>
                 <th>Acciones</th>
-                <th>Chat interno</th>
+                <th>Chat</th>
               </tr>
             </thead>
             <tbody id="tbody-cierre">
@@ -1361,7 +1361,7 @@ btnBloquear.addEventListener("click", async () => {
         document.getElementById("cierre-fecha").value =
           new Date().toLocaleDateString("en-CA");
         document.getElementById("nc-fecha").value =
-          new Date().toLocaleDateString("en-CA");F
+          new Date().toLocaleDateString("en-CA");
 
         // 7. CARGA INICIAL
         recargarDatos();
@@ -1435,62 +1435,77 @@ btnBloquear.addEventListener("click", async () => {
                         Eliminar
                     </button>
                 </td>
-                <td style="min-width:220px;">
-                    <div id="chat-cierre-${t.id}" style="max-height:110px; overflow-y:auto; font-size:0.8em; margin-bottom:4px;">
-                        ${
-                          (t.chat_interno || [])
-                            .map(
-                              (m) => `
-                            <div style="margin-bottom:3px;">
-                                <strong style="color:${m.rol === "medico" ? "#005A9C" : "#009A44"};">${m.rol === "medico" ? "Médico" : "PV"} (${m.autor || ""}):</strong>
-                                ${(m.texto || "").replace(/</g, "&lt;")}
-                            </div>`,
-                            )
-                            .join("") ||
-                          '<span style="color:#999;">Sin mensajes.</span>'
-                        }
-                    </div>
-                    <div style="display:flex; gap:4px;">
-                        <input id="chat-input-${t.id}" type="text" placeholder="Mensaje para el médico..."
-                            style="flex:1; font-size:0.8em; padding:4px;">
-                        <button onclick="enviarChatCierre(${t.id})"
-                            style="background:#005A9C; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8em;">
-                            Enviar
-                        </button>
-                    </div>
+                <td style="text-align:center;">
+                    <button onclick="abrirChatCierre(${t.id})"
+                        style="background:none; border:none; cursor:pointer; padding:4px;"
+                        title="${(t.chat_interno && t.chat_interno.length) ? t.chat_interno.length + " mensaje(s)" : "Sin mensajes"}">
+                        <span style="font-size:1.2em; color:${(t.chat_interno && t.chat_interno.length) ? "#005A9C" : "#ccc"};">💬</span>
+                    </button>
                 </td>
             </tr>`,
             )
             .join("");
+          turnosCierreActuales = turnos;
         } catch (e) {
           tbody.innerHTML =
             '<tr><td colspan="7" style="text-align:center; color:red;">Error al cargar.</td></tr>';
         }
       }
 
-      async function enviarChatCierre(id) {
-        const input = document.getElementById(`chat-input-${id}`);
+      let turnosCierreActuales = [];
+
+      function abrirChatCierre(id) {
+        const t = turnosCierreActuales.find((x) => x.id === id);
+        document.getElementById("chat-cierre-id").value = id;
+        document.getElementById("chat-cierre-titulo").textContent =
+          `Chat interno — ${t?.apellido_y_nombre || t?.dni || ""}`;
+        renderChatCierreLog(t?.chat_interno || []);
+        document.getElementById("chat-cierre-input").value = "";
+        document.getElementById("modal-chat-cierre").style.display = "flex";
+      }
+
+      function cerrarModalChatCierre() {
+        document.getElementById("modal-chat-cierre").style.display = "none";
+      }
+
+      function renderChatCierreLog(log) {
+        document.getElementById("chat-cierre-log").innerHTML = log.length
+          ? log
+              .map(
+                (m) => `
+              <div style="margin-bottom:6px;">
+                  <strong style="color:${m.rol === "medico" ? "#005A9C" : "#009A44"};">${m.rol === "medico" ? "Médico" : "PV"} (${m.autor || ""}):</strong>
+                  ${(m.texto || "").replace(/</g, "&lt;")}
+              </div>`,
+              )
+              .join("")
+          : '<span style="color:#999;">Sin mensajes.</span>';
+      }
+
+      async function enviarChatCierre() {
+        const id = Number(document.getElementById("chat-cierre-id").value);
+        const input = document.getElementById("chat-cierre-input");
         const texto = input.value.trim();
         if (!texto) return;
+        const t = turnosCierreActuales.find((x) => x.id === id);
+        const logActual = Array.isArray(t?.chat_interno) ? t.chat_interno : [];
+        const nuevoLog = [
+          ...logActual,
+          {
+            rol: "pv",
+            autor: window.dpPayload?.nombre || "",
+            texto,
+            fecha: new Date().toISOString(),
+          },
+        ];
         try {
-          const res = await fetch(`/api/agenda-cierre?fecha=${document.getElementById("cierre-fecha")?.value || ""}`);
-          const data = await res.json();
-          const turno = (data.turnos || []).find((t) => t.id === id);
-          const logActual = Array.isArray(turno?.chat_interno) ? turno.chat_interno : [];
-          const nuevoLog = [
-            ...logActual,
-            {
-              rol: "pv",
-              autor: window.dpPayload?.nombre || "",
-              texto,
-              fecha: new Date().toISOString(),
-            },
-          ];
           await fetch(`/api/agenda-cierre/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ chat_interno: nuevoLog }),
           });
+          if (t) t.chat_interno = nuevoLog;
+          renderChatCierreLog(nuevoLog);
           input.value = "";
           cargarAgendaCierre();
         } catch (e) {
@@ -2132,6 +2147,78 @@ async function eliminarDiaBloqueado(id) {
             class="action-button btn-green"
           >
             Guardar turno
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      id="modal-chat-cierre"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+      "
+    >
+      <div
+        style="
+          background: white;
+          border-radius: 10px;
+          padding: 24px;
+          max-width: 420px;
+          width: 100%;
+          margin: 20px auto;
+        "
+      >
+        <input type="hidden" id="chat-cierre-id" />
+        <h3
+          id="chat-cierre-titulo"
+          style="color: #005a9c; margin-top: 0; font-size: 1.1em"
+        >
+          Chat interno
+        </h3>
+        <div
+          id="chat-cierre-log"
+          style="
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+          "
+        ></div>
+        <div style="display: flex; gap: 6px">
+          <input
+            id="chat-cierre-input"
+            type="text"
+            placeholder="Mensaje para el médico..."
+            style="
+              flex: 1;
+              padding: 8px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          />
+          <button
+            onclick="enviarChatCierre()"
+            class="action-button btn-green"
+            style="height: 38px; background: #005a9c"
+          >
+            Enviar
+          </button>
+        </div>
+        <div style="text-align: right; margin-top: 14px">
+          <button
+            onclick="cerrarModalChatCierre()"
+            class="action-button btn-gray"
+          >
+            Cerrar
           </button>
         </div>
       </div>
