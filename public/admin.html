@@ -1358,12 +1358,10 @@ btnBloquear.addEventListener("click", async () => {
         vistas.cierre = document.getElementById("vista-cierre");
 
         // Setear fecha de hoy por defecto
-        document.getElementById("cierre-fecha").value = new Date()
-          .toISOString()
-          .split("T")[0];
-        document.getElementById("nc-fecha").value = new Date()
-          .toISOString()
-          .split("T")[0];
+        document.getElementById("cierre-fecha").value =
+          new Date().toLocaleDateString("en-CA");
+        document.getElementById("nc-fecha").value =
+          new Date().toLocaleDateString("en-CA");F
 
         // 7. CARGA INICIAL
         recargarDatos();
@@ -1573,9 +1571,8 @@ async function eliminarHorarioSede(id) {
         const payload = window.dpPayload;
         const idSede = payload?.id_sede_dp || "";
         document.getElementById("nc-sede").value = idSede;
-        document.getElementById("nc-fecha").value = new Date()
-          .toISOString()
-          .split("T")[0];
+        document.getElementById("nc-fecha").value =
+          new Date().toLocaleDateString("en-CA");
         document.getElementById("nc-medico-select").innerHTML =
           '<option value="">— Primero seleccioná una fecha —</option>';
         document.getElementById("nc-slots").innerHTML =
