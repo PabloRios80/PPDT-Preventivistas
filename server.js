@@ -216,6 +216,147 @@ app.get("/api/admin/derivaciones", async (req, res) => {
   }
 });
 
+// ── DERIVACIONES (Supabase) — médicos derivadores externos ──
+// Por ahora el circuito funciona SOLO en IAPOS Espacio Prestacional Santa Fe
+// (id_sede_dp = 1). Para sumar sedes, agregar su id acá y en Tablero del Día.
+const SEDES_CON_DERIVACIONES = [1];
+const sedeTieneDerivaciones = (idSede) =>
+  SEDES_CON_DERIVACIONES.includes(parseInt(idSede));
+const ESTADOS_DERIVACION_CERRADA = ["CERRADO", "CERRADA", "ANULADO", "ANULADA", "FINALIZADO"];
+
+// Datos de contacto de los derivadores, por id de profesional
+async function contactosDerivadores(ids) {
+  const lista = [...new Set((ids || []).filter(Boolean))];
+  const mapa = {};
+  if (lista.length === 0) return mapa;
+  const { data } = await supabase
+    .from("profesionales")
+    .select("id, nombre, apellido, telefono, email")
+    .in("id", lista);
+  (data || []).forEach((p) => (mapa[p.id] = p));
+  return mapa;
+}
+
+function armarDerivacion(d, prof) {
+  const nombreProf = prof ? `${prof.nombre || ""} ${prof.apellido || ""}`.trim() : "";
+  return {
+    id: d.id,
+    id_profesional: d.id_profesional || null,
+    medico: nombreProf || d.profesional || "Médico derivador (sin nombre)",
+    telefono: prof?.telefono || null,
+    email: prof?.email || null,
+    estado: d.estado,
+    fecha: d.fecha_derivacion,
+    aviso_listo_en: d.aviso_listo_en || null,
+    aviso_listo_por: d.aviso_listo_por || null,
+    aviso_listo_medio: d.aviso_listo_medio || null,
+  };
+}
+
+// Mapa { dni: derivacion activa } — si un DNI tiene varias, se queda con la
+// que tiene médico vinculado y, a igualdad, la más nueva.
+async function buscarDerivacionesActivas(dnis) {
+  const lista = [...new Set((dnis || []).filter(Boolean).map(String))];
+  const mapa = {};
+  if (lista.length === 0) return mapa;
+  try {
+    const { data, error } = await supabase
+      .from("derivaciones")
+      .select("*")
+      .in("dni", lista);
+    if (error) throw error;
+    const activas = (data || []).filter(
+      (d) => !ESTADOS_DERIVACION_CERRADA.includes(String(d.estado || "").toUpperCase()),
+    );
+    const profs = await contactosDerivadores(activas.map((d) => d.id_profesional));
+    activas.sort((a, b) => {
+      const va = profs[a.id_profesional] ? 1 : 0;
+      const vb = profs[b.id_profesional] ? 1 : 0;
+      if (va !== vb) return vb - va;
+      return String(b.fecha_derivacion || "").localeCompare(String(a.fecha_derivacion || ""));
+    });
+    for (const d of activas) {
+      if (!mapa[d.dni]) mapa[d.dni] = armarDerivacion(d, profs[d.id_profesional]);
+    }
+  } catch (e) {
+    console.warn("No se pudieron buscar derivaciones:", e.message);
+  }
+  return mapa;
+}
+
+// ¿El médico de cierre elegido es el mismo profesional que derivó?
+// (algunos derivadores también son médicos internos del centro)
+async function medicoEsElDerivador(idMedicoCierre, derivacion) {
+  if (!idMedicoCierre || !derivacion?.id_profesional) return false;
+  const { data } = await supabase
+    .from("medicos_cierre_dp")
+    .select("id_profesional")
+    .eq("id", idMedicoCierre)
+    .maybeSingle();
+  return !!data?.id_profesional && data.id_profesional === derivacion.id_profesional;
+}
+
+// Derivación activa de un DNI (para el modal de nuevo turno de cierre)
+app.get("/api/derivacion-activa/:dni", async (req, res) => {
+  try {
+    if (!sedeTieneDerivaciones(req.query.id_sede_dp))
+      return res.json({ status: "success", derivacion: null });
+    const mapa = await buscarDerivacionesActivas([req.params.dni]);
+    res.json({ status: "success", derivacion: mapa[req.params.dni] || null });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// Lista de derivaciones (pestaña "Derivaciones"), desde Supabase
+app.get("/api/derivaciones-sede", async (req, res) => {
+  try {
+    if (!sedeTieneDerivaciones(req.query.id_sede_dp))
+      return res.json({ status: "success", derivaciones: [] });
+    const { data, error } = await supabase.from("derivaciones").select("*");
+    if (error) throw error;
+    const profs = await contactosDerivadores((data || []).map((d) => d.id_profesional));
+    const lista = (data || []).map((d) => ({
+      ...armarDerivacion(d, profs[d.id_profesional]),
+      dni: d.dni,
+      paciente: `${d.apellido || ""} ${d.nombre || ""}`.trim(),
+      paciente_telefono: d.telefono,
+      paciente_email: d.email,
+      observaciones: d.observaciones,
+    }));
+    // Primero los listos para cierre sin avisar, después el resto
+    const peso = (d) =>
+      d.estado === "LISTO_PARA_CERRAR" && !d.aviso_listo_en ? 0
+      : d.estado === "LISTO_PARA_CERRAR" ? 1
+      : ESTADOS_DERIVACION_CERRADA.includes(String(d.estado).toUpperCase()) ? 3
+      : 2;
+    lista.sort((a, b) => peso(a) - peso(b) || String(b.fecha || "").localeCompare(String(a.fecha || "")));
+    res.json({ status: "success", derivaciones: lista });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
+// El PV registra que avisó al derivador que el paciente está listo para el cierre
+app.patch("/api/derivaciones/:id/aviso-listo", async (req, res) => {
+  const { medio, por } = req.body || {};
+  if (!medio) return res.status(400).json({ status: "error", message: "Falta el medio del aviso." });
+  try {
+    const { error } = await supabase
+      .from("derivaciones")
+      .update({
+        aviso_listo_en: new Date().toISOString(),
+        aviso_listo_por: por || null,
+        aviso_listo_medio: medio,
+      })
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
 // ── AGENDA CIERRE DP ──
 
 // Obtener agenda por sede y fecha
@@ -230,7 +371,15 @@ app.get("/api/agenda-cierre", async (req, res) => {
     if (fecha) query = query.eq("fecha", fecha);
     const { data, error } = await query;
     if (error) throw error;
-    res.json({ status: "success", turnos: data });
+
+    const turnos = data || [];
+    const conDeriv = turnos.filter((t) => sedeTieneDerivaciones(t.id_sede_dp));
+    const mapa = await buscarDerivacionesActivas(conDeriv.map((t) => t.dni));
+    turnos.forEach(
+      (t) => (t.derivacion = sedeTieneDerivaciones(t.id_sede_dp) ? mapa[t.dni] || null : null),
+    );
+
+    res.json({ status: "success", turnos });
   } catch (e) {
     res.status(500).json({ status: "error", message: e.message });
   }
@@ -239,6 +388,28 @@ app.get("/api/agenda-cierre", async (req, res) => {
 // Agendar turno de cierre
 app.post("/api/agenda-cierre", async (req, res) => {
   try {
+    // Paciente derivado: el cierre le corresponde al médico derivador. Si
+    // el PV lo turna igual con un médico del centro, tiene que dejar motivo.
+    // (Telereceta no pasa por acá, va directo a PPDT-Profesionales.)
+    if (sedeTieneDerivaciones(req.body.id_sede_dp) && req.body.dni) {
+      const mapa = await buscarDerivacionesActivas([req.body.dni]);
+      const deriv = mapa[String(req.body.dni)];
+      if (deriv && !(await medicoEsElDerivador(req.body.id_medico, deriv))) {
+        const motivo = String(req.body.motivo_no_derivador || "").trim();
+        if (motivo.length < 10) {
+          return res.status(400).json({
+            status: "error",
+            message: `Paciente derivado por Dr/a. ${deriv.medico}. Para turnarlo con otro médico tenés que escribir el motivo (mínimo 10 caracteres).`,
+          });
+        }
+        req.body.motivo_no_derivador = motivo;
+      } else {
+        delete req.body.motivo_no_derivador;
+      }
+    } else {
+      delete req.body.motivo_no_derivador;
+    }
+
     const { error } = await supabase.from("agenda_cierre_dp").insert(req.body);
     if (error) throw error;
     res.json({ status: "success" });

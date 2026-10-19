@@ -236,17 +236,19 @@
         <div id="vista-derivaciones" class="vista">
           <h3>Derivaciones Recibidas</h3>
           <p style="font-size: 0.8em; color: gray">
-            (Las derivaciones son globales para todas las sedes)
+            Pacientes que mandan los médicos derivadores. Cuando un paciente
+            queda <strong>LISTO PARA CIERRE</strong>, avisale al derivador para
+            que lo cite en su consultorio y registrá el aviso.
           </p>
           <table id="derivaciones-table">
             <thead>
               <tr>
                 <th>Fecha Deriv.</th>
-                <th>DNI Paciente</th>
-                <th>Nombre y Apellido</th>
-                <th>Contacto</th>
-                <th>Observaciones</th>
+                <th>Paciente</th>
                 <th>Médico Derivador</th>
+                <th>Estado</th>
+                <th>Aviso al derivador</th>
+                <th>Observaciones</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -778,6 +780,8 @@ if (window.cityActiva === "sin_configurar") {
   document.getElementById("tab-agregar")?.style.setProperty("display", "none");
   document.getElementById("tab-derivaciones")?.style.setProperty("display", "none");
 }
+// Derivaciones: por ahora solo en Espacio Prestacional Santa Fe (sede 1)
+actualizarTabDerivaciones();
 
 // Mostrar el nombre real de la sede en el box, independiente de si tiene turnera Apps Script
 if (payload && !payload.es_superuser && payload.id_sede_dp) {
@@ -984,21 +988,92 @@ if (tabHorarios) {
   }
 }
 
+        // Sede que se está mirando (el superuser elige; el PV tiene la suya)
+        function sedeParaDerivaciones() {
+          const p = window.dpPayload;
+          if (p && !p.es_superuser) return parseInt(p.id_sede_dp) || null;
+          if (window.idSedeParaVerSuperuser) return window.idSedeParaVerSuperuser;
+          return window.cityActiva === "santafe" ? 1 : null;
+        }
+
+        // Las derivaciones por ahora solo funcionan en Espacio Prestacional
+        // Santa Fe (sede 1): en el resto de las sedes la pestaña no se muestra.
+        function actualizarTabDerivaciones() {
+          const visible = [1].includes(sedeParaDerivaciones());
+          tabDerivaciones?.style.setProperty("display", visible ? "" : "none");
+          return visible;
+        }
+
+        window.registrarAvisoDerivador = async function (id, medico) {
+          const medio = prompt(
+            `¿Cómo le avisaste a Dr/a. ${medico} que el paciente está listo para el cierre?\n(Teléfono, WhatsApp, Mail, En persona...)`,
+            "WhatsApp",
+          );
+          if (!medio || !medio.trim()) return;
+          const p = window.dpPayload || {};
+          const por = `${p.nombre || ""} ${p.apellido || ""}`.trim() || p.usuario || null;
+          try {
+            const res = await fetch(`/api/derivaciones/${id}/aviso-listo`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ medio: medio.trim(), por }),
+            });
+            const data = await res.json();
+            if (!res.ok || data.status !== "success")
+              throw new Error(data.message || "Error al guardar");
+            cargarDerivaciones();
+          } catch (e) {
+            alert("No se pudo registrar el aviso: " + e.message);
+          }
+        };
+
         async function cargarDerivaciones() {
+          if (!actualizarTabDerivaciones()) {
+            derivacionesTableBody.innerHTML =
+              '<tr><td colspan="6" style="text-align:center;">Las derivaciones solo están habilitadas en Espacio Prestacional Santa Fe.</td></tr>';
+            return;
+          }
           derivacionesTableBody.innerHTML =
             '<tr><td colspan="6">Cargando...</td></tr>';
           try {
-            const response = await fetch("/api/admin/derivaciones");
+            const response = await fetch(
+              `/api/derivaciones-sede?id_sede_dp=${sedeParaDerivaciones()}`,
+            );
             const data = await response.json();
-            if (data.status === "success" && data.referrals.length > 0) {
-              let html = "";
-              data.referrals.forEach((d) => {
-                const fechaDeriv = new Date(
-                  d.fechaDerivacion,
-                ).toLocaleDateString("es-AR");
-                html += `<tr><td>${fechaDeriv}</td><td>${d.dni}</td><td>${d.nombre} ${d.apellido}</td><td>${d.telefono}<br>${d.email}</td><td>${d.observaciones || ""}</td><td><strong>${d.medicoDerivador || ""}</strong></td></tr>`;
-              });
-              derivacionesTableBody.innerHTML = html;
+            const lista = data.derivaciones || [];
+            if (data.status === "success" && lista.length > 0) {
+              const ESTILO_ESTADO = {
+                PENDIENTE: "background:#fff3cd; color:#856404;",
+                LISTO_PARA_CERRAR: "background:#dc3545; color:white;",
+              };
+              const fmtFecha = (f) => {
+                const dt = new Date(/^\d{4}-\d{2}-\d{2}$/.test(f || "") ? f + "T12:00:00" : f);
+                return isNaN(dt) ? escHtml(f || "") : dt.toLocaleDateString("es-AR");
+              };
+              derivacionesTableBody.innerHTML = lista
+                .map((d) => {
+                  const contactoMed = contactoDerivadorHtml(d);
+                  const listo = d.estado === "LISTO_PARA_CERRAR";
+                  let aviso = '<span style="color:#999;">—</span>';
+                  if (d.aviso_listo_en) {
+                    aviso = `<span style="color:#155724; font-weight:bold;">✓ ${new Date(d.aviso_listo_en).toLocaleDateString("es-AR")}</span>
+                      <br><span style="font-size:0.8em; color:#555;">${escHtml(d.aviso_listo_medio || "")}${d.aviso_listo_por ? " — " + escHtml(d.aviso_listo_por) : ""}</span>`;
+                  } else if (listo) {
+                    aviso = `<button onclick="registrarAvisoDerivador('${d.id}', '${escHtml(d.medico).replace(/'/g, "")}')"
+                      style="background:#005A9C; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.85em; font-weight:bold;">
+                      📞 Avisé al derivador</button>`;
+                  }
+                  return `<tr style="${listo && !d.aviso_listo_en ? "background:#fff5f5;" : ""}">
+                    <td>${fmtFecha(d.fecha)}</td>
+                    <td><strong>${escHtml(d.paciente)}</strong><br><span style="font-size:0.85em;">DNI ${escHtml(d.dni)}</span>
+                      <br><span style="font-size:0.8em; color:#666;">${escHtml(d.paciente_telefono || "")} ${escHtml(d.paciente_email || "")}</span></td>
+                    <td><strong>${escHtml(d.medico)}</strong>${contactoMed ? `<br><span style="font-size:0.8em; color:#555;">${contactoMed}</span>` : ""}</td>
+                    <td><span style="padding:3px 8px; border-radius:12px; font-size:0.8em; font-weight:bold; ${ESTILO_ESTADO[d.estado] || "background:#eee; color:#555;"}">${escHtml((d.estado || "").replace(/_/g, " "))}</span></td>
+                    <td>${aviso}</td>
+                    <td style="font-size:0.85em;">${escHtml(d.observaciones || "")}</td>
+                  </tr>`;
+                })
+                .join("");
             } else {
               derivacionesTableBody.innerHTML =
                 '<tr><td colspan="6" style="text-align:center;">No hay derivaciones recibidas.</td></tr>';
@@ -1411,7 +1486,17 @@ btnBloquear.addEventListener("click", async () => {
               (t) => `
             <tr>
                 <td><strong>${t.hora || "S/H"}</strong></td>
-                <td>${t.apellido_y_nombre || "S/N"}</td>
+                <td>${t.apellido_y_nombre || "S/N"}${
+                  t.derivacion
+                    ? `<br><span title="Derivado por Dr/a. ${escHtml(t.derivacion.medico)}"
+                         style="display:inline-block; margin-top:3px; background:#dc3545; color:white; font-size:0.75em; font-weight:bold; padding:2px 6px; border-radius:4px;">
+                         ↪ DERIVADO — Dr/a. ${escHtml(t.derivacion.medico)}</span>`
+                    : ""
+                }${
+                  t.motivo_no_derivador
+                    ? `<br><span style="font-size:0.75em; color:#a71d2a;">Turnado con otro médico: ${escHtml(t.motivo_no_derivador)}</span>`
+                    : ""
+                }</td>
                 <td>${t.dni}</td>
                 <td>${t.nombre_medico || "S/M"}</td>
                 <td><span style="padding:4px 10px; border-radius:20px; font-size:0.85em; font-weight:bold; ${COLORES_ESTADO[t.estado] || ""}">${t.estado}</span></td>
@@ -1615,6 +1700,7 @@ async function eliminarHorarioSede(id) {
         document.getElementById("nc-hora-seleccionada").value = "";
         document.getElementById("nc-dni").value = "";
         document.getElementById("nc-afiliado-info").innerHTML = "";
+        limpiarDerivacionModal();
         document.getElementById("nc-obs").value = "";
         document.getElementById("nc-tipo-turno").value = ""; 
         document.getElementById("nc-modalidad-wrapper").style.display = "none";
@@ -1734,10 +1820,82 @@ async function eliminarHorarioSede(id) {
         });
       }
 
+      // ==========================================
+      // PACIENTE DERIVADO (solo Espacio Prestacional Santa Fe, sede 1)
+      // ==========================================
+      const SEDES_CON_DERIVACIONES = [1];
+      let ncDerivacion = null; // derivación activa del DNI cargado en el modal
+
+      function escHtml(t) {
+        return String(t ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function contactoDerivadorHtml(d) {
+        return [
+          d.telefono ? `📞 ${escHtml(d.telefono)}` : "",
+          d.email ? `✉️ ${escHtml(d.email)}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+      }
+
+      function limpiarDerivacionModal() {
+        ncDerivacion = null;
+        const box = document.getElementById("nc-derivacion-box");
+        if (box) {
+          box.innerHTML = "";
+          box.style.display = "none";
+        }
+      }
+
+      async function cargarDerivacionModal(dni) {
+        limpiarDerivacionModal();
+        const idSede = document.getElementById("nc-sede").value;
+        if (!SEDES_CON_DERIVACIONES.includes(parseInt(idSede))) return;
+        try {
+          const res = await fetch(`/api/derivacion-activa/${dni}?id_sede_dp=${idSede}`);
+          const data = await res.json();
+          if (!data.derivacion) return;
+          ncDerivacion = data.derivacion;
+          const d = ncDerivacion;
+          const contacto = contactoDerivadorHtml(d);
+          const box = document.getElementById("nc-derivacion-box");
+          box.innerHTML = `
+            <div style="background:#fdecea; border:2px solid #dc3545; border-radius:8px; padding:10px;">
+              <div style="font-weight:bold; color:#a71d2a;">⚠️ PACIENTE DERIVADO — Dr/a. ${escHtml(d.medico)}</div>
+              ${contacto ? `<div style="font-size:0.85em; color:#555; margin-top:4px;">${contacto}</div>` : ""}
+              <div style="font-size:0.85em; color:#333; margin-top:6px;">
+                El cierre / seguimiento le corresponde al médico derivador: avisale que el
+                paciente está listo para que lo cite en su consultorio. <strong>No turnarlo
+                con un médico del centro.</strong>
+              </div>
+              ${
+                d.aviso_listo_en
+                  ? `<div style="font-size:0.8em; color:#155724; margin-top:6px;">✓ Derivador avisado el ${new Date(d.aviso_listo_en).toLocaleDateString("es-AR")} (${escHtml(d.aviso_listo_medio || "")}${d.aviso_listo_por ? " — " + escHtml(d.aviso_listo_por) : ""})</div>`
+                  : ""
+              }
+              <label style="display:block; font-weight:bold; font-size:0.85em; margin-top:10px;">
+                Si igual lo turnás con otro médico, explicá el motivo (obligatorio):
+              </label>
+              <textarea id="nc-motivo-no-derivador" rows="2"
+                placeholder="Ej: el Dr. no responde hace 2 semanas / el paciente pidió atenderse acá..."
+                style="width:100%; padding:6px; border-radius:5px; border:1px solid #dc3545; box-sizing:border-box; font-size:0.9em;"></textarea>
+            </div>`;
+          box.style.display = "block";
+        } catch (e) {
+          console.warn("No se pudo consultar la derivación:", e);
+        }
+      }
+
       async function buscarAfiliadoCierre() {
         const dni = document.getElementById("nc-dni").value.trim();
         const infoDiv = document.getElementById("nc-afiliado-info");
         if (!dni) return;
+        limpiarDerivacionModal();
 
         infoDiv.innerHTML = '<span style="color:#666;">Buscando...</span>';
         try {
@@ -1747,6 +1905,7 @@ async function eliminarHorarioSede(id) {
             infoDiv.innerHTML = `<span style="color:#009A44; font-weight:bold;">✓ ${data.nombre}</span> <span style="color:#666;">| ${data.edad} años</span>`;
             // Guardar nombre para el turno
             document.getElementById("nc-dni").dataset.nombre = data.nombre;
+            await cargarDerivacionModal(dni);
           } else {
             infoDiv.innerHTML =
               '<span style="color:#dc3545;">❌ No es afiliado activo en IAPOS.</span>';
@@ -1968,6 +2127,9 @@ async function eliminarDiaBloqueado(id) {
               estado: "AGENDADO",
               tipo_turno: tipoTurno,
               modalidad: modalidad,
+              // Solo lo usa el server si el paciente es derivado (sede 1)
+              motivo_no_derivador:
+                document.getElementById("nc-motivo-no-derivador")?.value.trim() || null,
             }),
           });
           const data = await res.json();
@@ -1976,7 +2138,13 @@ async function eliminarDiaBloqueado(id) {
             document.getElementById("cierre-fecha").value = fecha;
             cargarAgendaCierre();
           } else {
-            alert("Error al guardar: " + data.message);
+            // Si el server lo frenó por ser derivado y el PV no había tocado
+            // "Buscar", mostramos el aviso con el campo de motivo.
+            if (!ncDerivacion && /derivado/i.test(data.message || "")) {
+              await cargarDerivacionModal(dni);
+            }
+            alert(data.message || "Error al guardar.");
+            document.getElementById("nc-motivo-no-derivador")?.focus();
           }
         } catch (e) {
           alert("Error de conexión.");
@@ -2103,6 +2271,8 @@ async function eliminarDiaBloqueado(id) {
             id="nc-afiliado-info"
             style="margin-top: 8px; font-size: 0.9em; color: #333"
           ></div>
+          <!-- Paciente derivado: aviso + motivo obligatorio (solo sede 1) -->
+          <div id="nc-derivacion-box" style="display: none; margin-top: 10px"></div>
         </div>
         <!-- Paso 5: Tipo de turno -->
         <div style="margin-bottom: 16px">
