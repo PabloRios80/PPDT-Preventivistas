@@ -1067,7 +1067,7 @@ if (tabHorarios) {
                     <td>${fmtFecha(d.fecha)}</td>
                     <td><strong>${escHtml(d.paciente)}</strong><br><span style="font-size:0.85em;">DNI ${escHtml(d.dni)}</span>
                       <br><span style="font-size:0.8em; color:#666;">${escHtml(d.paciente_telefono || "")} ${escHtml(d.paciente_email || "")}</span></td>
-                    <td><strong>${escHtml(d.medico)}</strong>${contactoMed ? `<br><span style="font-size:0.8em; color:#555;">${contactoMed}</span>` : ""}</td>
+                    <td><strong>${escHtml(d.medico)}</strong>${etiquetaInstitucionHtml(d)}${contactoMed ? `<br><span style="font-size:0.8em; color:#555;">${contactoMed}</span>` : ""}</td>
                     <td><span style="padding:3px 8px; border-radius:12px; font-size:0.8em; font-weight:bold; ${ESTILO_ESTADO[d.estado] || "background:#eee; color:#555;"}">${escHtml((d.estado || "").replace(/_/g, " "))}</span></td>
                     <td>${aviso}</td>
                     <td style="font-size:0.85em;">${escHtml(d.observaciones || "")}</td>
@@ -1490,7 +1490,7 @@ btnBloquear.addEventListener("click", async () => {
                   t.derivacion
                     ? `<br><span title="Derivado por Dr/a. ${escHtml(t.derivacion.medico)}"
                          style="display:inline-block; margin-top:3px; background:#dc3545; color:white; font-size:0.75em; font-weight:bold; padding:2px 6px; border-radius:4px;">
-                         ↪ DERIVADO — Dr/a. ${escHtml(t.derivacion.medico)}</span>`
+                         ↪ DERIVADO — Dr/a. ${escHtml(t.derivacion.medico)}</span>${etiquetaInstitucionHtml(t.derivacion)}`
                     : ""
                 }${
                   t.motivo_no_derivador
@@ -1834,6 +1834,13 @@ async function eliminarHorarioSede(id) {
           .replace(/"/g, "&quot;");
       }
 
+      // Etiqueta de la institución del derivador (ej. OPTIMUS), si tiene
+      function etiquetaInstitucionHtml(d) {
+        return d && d.institucion
+          ? ` <span style="display:inline-block; background:#6d28d9; color:white; font-size:0.8em; font-weight:bold; padding:1px 6px; border-radius:4px; margin-left:4px;">${escHtml(d.institucion)}</span>`
+          : "";
+      }
+
       function contactoDerivadorHtml(d) {
         return [
           d.telefono ? `📞 ${escHtml(d.telefono)}` : "",
@@ -1866,7 +1873,7 @@ async function eliminarHorarioSede(id) {
           const box = document.getElementById("nc-derivacion-box");
           box.innerHTML = `
             <div style="background:#fdecea; border:2px solid #dc3545; border-radius:8px; padding:10px;">
-              <div style="font-weight:bold; color:#a71d2a;">⚠️ PACIENTE DERIVADO — Dr/a. ${escHtml(d.medico)}</div>
+              <div style="font-weight:bold; color:#a71d2a;">⚠️ PACIENTE DERIVADO — Dr/a. ${escHtml(d.medico)}${etiquetaInstitucionHtml(d)}</div>
               ${contacto ? `<div style="font-size:0.85em; color:#555; margin-top:4px;">${contacto}</div>` : ""}
               <div style="font-size:0.85em; color:#333; margin-top:6px;">
                 El cierre / seguimiento le corresponde al médico derivador: avisale que el

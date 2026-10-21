@@ -231,16 +231,30 @@ async function contactosDerivadores(ids) {
   if (lista.length === 0) return mapa;
   const { data } = await supabase
     .from("profesionales")
-    .select("id, nombre, apellido, telefono, email")
+    .select("id, nombre, apellido, telefono, email, id_institucion_derivadora")
     .in("id", lista);
   (data || []).forEach((p) => (mapa[p.id] = p));
   return mapa;
 }
 
-function armarDerivacion(d, prof) {
+// Nombres de las instituciones derivadoras (ej. OPTIMUS), id -> nombre
+let cacheInstituciones = { datos: {}, hasta: 0 };
+async function nombresInstituciones() {
+  if (Date.now() < cacheInstituciones.hasta) return cacheInstituciones.datos;
+  const { data } = await supabase.from("instituciones_derivadoras").select("id, nombre");
+  const datos = {};
+  (data || []).forEach((i) => (datos[i.id] = i.nombre));
+  cacheInstituciones = { datos, hasta: Date.now() + 10 * 60 * 1000 }; // 10 minutos
+  return datos;
+}
+
+function armarDerivacion(d, prof, instituciones = {}) {
   const nombreProf = prof ? `${prof.nombre || ""} ${prof.apellido || ""}`.trim() : "";
+  // Institución: la guardada en la derivación; si no tiene, la actual del médico
+  const idInst = d.id_institucion_derivadora || prof?.id_institucion_derivadora || null;
   return {
     id: d.id,
+    institucion: idInst ? instituciones[idInst] || null : null,
     id_profesional: d.id_profesional || null,
     medico: nombreProf || d.profesional || "Médico derivador (sin nombre)",
     telefono: prof?.telefono || null,
@@ -269,6 +283,7 @@ async function buscarDerivacionesActivas(dnis) {
       (d) => !ESTADOS_DERIVACION_CERRADA.includes(String(d.estado || "").toUpperCase()),
     );
     const profs = await contactosDerivadores(activas.map((d) => d.id_profesional));
+    const instituciones = await nombresInstituciones();
     activas.sort((a, b) => {
       const va = profs[a.id_profesional] ? 1 : 0;
       const vb = profs[b.id_profesional] ? 1 : 0;
@@ -276,7 +291,7 @@ async function buscarDerivacionesActivas(dnis) {
       return String(b.fecha_derivacion || "").localeCompare(String(a.fecha_derivacion || ""));
     });
     for (const d of activas) {
-      if (!mapa[d.dni]) mapa[d.dni] = armarDerivacion(d, profs[d.id_profesional]);
+      if (!mapa[d.dni]) mapa[d.dni] = armarDerivacion(d, profs[d.id_profesional], instituciones);
     }
   } catch (e) {
     console.warn("No se pudieron buscar derivaciones:", e.message);
@@ -316,8 +331,9 @@ app.get("/api/derivaciones-sede", async (req, res) => {
     const { data, error } = await supabase.from("derivaciones").select("*");
     if (error) throw error;
     const profs = await contactosDerivadores((data || []).map((d) => d.id_profesional));
+    const instituciones = await nombresInstituciones();
     const lista = (data || []).map((d) => ({
-      ...armarDerivacion(d, profs[d.id_profesional]),
+      ...armarDerivacion(d, profs[d.id_profesional], instituciones),
       dni: d.dni,
       paciente: `${d.apellido || ""} ${d.nombre || ""}`.trim(),
       paciente_telefono: d.telefono,
