@@ -354,6 +354,43 @@ app.get("/api/derivaciones-sede", async (req, res) => {
 });
 
 // El PV registra que avisó al derivador que el paciente está listo para el cierre
+// Eliminar una derivación (datos basura o de prueba). Antes de borrar se
+// guarda una copia completa en derivaciones_eliminadas, para poder
+// recuperarla si se borró por error.
+app.delete("/api/derivaciones/:id", async (req, res) => {
+  const por = (req.body && req.body.por) || req.query.por || null;
+  try {
+    const { data: deriv, error: errorLeer } = await supabase
+      .from("derivaciones")
+      .select("*")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (errorLeer) throw errorLeer;
+    if (!deriv)
+      return res.status(404).json({ status: "error", message: "La derivación no existe (¿ya fue eliminada?)." });
+
+    const { error: errorCopia } = await supabase.from("derivaciones_eliminadas").insert({
+      id_derivacion: deriv.id,
+      dni: deriv.dni,
+      datos: deriv,
+      eliminado_por: por,
+    });
+    // Si no se pudo guardar la copia, NO se borra
+    if (errorCopia) throw new Error("No se pudo guardar la copia de respaldo: " + errorCopia.message);
+
+    const { error: errorBorrar } = await supabase
+      .from("derivaciones")
+      .delete()
+      .eq("id", req.params.id);
+    if (errorBorrar) throw errorBorrar;
+
+    console.log(`🗑️ Derivación ${deriv.id} (DNI ${deriv.dni}) eliminada por ${por || "?"}`);
+    res.json({ status: "success" });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: e.message });
+  }
+});
+
 app.patch("/api/derivaciones/:id/aviso-listo", async (req, res) => {
   const { medio, por } = req.body || {};
   if (!medio) return res.status(400).json({ status: "error", message: "Falta el medio del aviso." });

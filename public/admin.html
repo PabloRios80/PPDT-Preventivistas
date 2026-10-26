@@ -249,6 +249,7 @@
                 <th>Estado</th>
                 <th>Aviso al derivador</th>
                 <th>Observaciones</th>
+                <th></th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -868,7 +869,7 @@ if (tabHorarios) {
         });
         // 5. FUNCIONES PARA CARGAR DATOS
        async function cargarTurnosAgendados() {
-  turnosTableBody.innerHTML = '<tr><td colspan="6">Cargando...</td></tr>';
+  turnosTableBody.innerHTML = '<tr><td colspan="7">Cargando...</td></tr>';
   const ciudad = window.cityActiva;
 
   if (ciudad === "sin_configurar") {
@@ -1027,20 +1028,53 @@ if (tabHorarios) {
           }
         };
 
+        // Lista que se está mostrando, para armar el mensaje de confirmación
+        let derivacionesMostradas = [];
+
+        window.eliminarDerivacion = async function (id) {
+          const d = derivacionesMostradas.find((x) => String(x.id) === String(id));
+          const resumen = d
+            ? `Paciente: ${d.paciente || "(sin nombre)"} — DNI ${d.dni}\nMédico: ${d.medico}\nEstado: ${(d.estado || "").replace(/_/g, " ")}`
+            : `Derivación ${id}`;
+          if (
+            !confirm(
+              `¿Eliminar esta derivación?\n\n${resumen}\n\nUsalo solo para datos de prueba o cargados por error. ` +
+                `Queda una copia de respaldo por si hay que recuperarla.`,
+            )
+          )
+            return;
+          const p = window.dpPayload || {};
+          const por = `${p.nombre || ""} ${p.apellido || ""}`.trim() || p.usuario || null;
+          try {
+            const res = await fetch(`/api/derivaciones/${id}`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ por }),
+            });
+            const data = await res.json();
+            if (!res.ok || data.status !== "success")
+              throw new Error(data.message || "Error al eliminar");
+            cargarDerivaciones();
+          } catch (e) {
+            alert("No se pudo eliminar: " + e.message);
+          }
+        };
+
         async function cargarDerivaciones() {
           if (!actualizarTabDerivaciones()) {
             derivacionesTableBody.innerHTML =
-              '<tr><td colspan="6" style="text-align:center;">Las derivaciones solo están habilitadas en Espacio Prestacional Santa Fe.</td></tr>';
+              '<tr><td colspan="7" style="text-align:center;">Las derivaciones solo están habilitadas en Espacio Prestacional Santa Fe.</td></tr>';
             return;
           }
           derivacionesTableBody.innerHTML =
-            '<tr><td colspan="6">Cargando...</td></tr>';
+            '<tr><td colspan="7">Cargando...</td></tr>';
           try {
             const response = await fetch(
               `/api/derivaciones-sede?id_sede_dp=${sedeParaDerivaciones()}`,
             );
             const data = await response.json();
             const lista = data.derivaciones || [];
+            derivacionesMostradas = lista;
             if (data.status === "success" && lista.length > 0) {
               const ESTILO_ESTADO = {
                 PENDIENTE: "background:#fff3cd; color:#856404;",
@@ -1071,16 +1105,21 @@ if (tabHorarios) {
                     <td><span style="padding:3px 8px; border-radius:12px; font-size:0.8em; font-weight:bold; ${ESTILO_ESTADO[d.estado] || "background:#eee; color:#555;"}">${escHtml((d.estado || "").replace(/_/g, " "))}</span></td>
                     <td>${aviso}</td>
                     <td style="font-size:0.85em;">${escHtml(d.observaciones || "")}</td>
+                    <td>
+                      <button onclick="eliminarDerivacion('${escHtml(d.id)}')" title="Eliminar (datos de prueba o basura)"
+                        style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">
+                        🗑️ Eliminar</button>
+                    </td>
                   </tr>`;
                 })
                 .join("");
             } else {
               derivacionesTableBody.innerHTML =
-                '<tr><td colspan="6" style="text-align:center;">No hay derivaciones recibidas.</td></tr>';
+                '<tr><td colspan="7" style="text-align:center;">No hay derivaciones recibidas.</td></tr>';
             }
           } catch (error) {
             derivacionesTableBody.innerHTML =
-              '<tr><td colspan="6" style="text-align:center;">Error al cargar las derivaciones.</td></tr>';
+              '<tr><td colspan="7" style="text-align:center;">Error al cargar las derivaciones.</td></tr>';
           }
         }
 async function cargarDiasBloqueados() {
