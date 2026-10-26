@@ -240,6 +240,25 @@
             queda <strong>LISTO PARA CIERRE</strong>, avisale al derivador para
             que lo cite en su consultorio y registrá el aviso.
           </p>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin:10px 0;">
+            <div>
+              <label style="display:block; font-size:0.8em; font-weight:bold; color:#555;">Ordenar</label>
+              <select id="filtro-deriv-orden" onchange="renderDerivaciones()"
+                style="padding:6px; border-radius:5px; border:1px solid #ccc;">
+                <option value="prioridad">Listos para cierre primero</option>
+                <option value="nuevas">Fecha: más nuevas primero</option>
+                <option value="viejas">Fecha: más viejas primero</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8em; font-weight:bold; color:#555;">Médico derivador</label>
+              <select id="filtro-deriv-medico" onchange="renderDerivaciones()"
+                style="padding:6px; border-radius:5px; border:1px solid #ccc; min-width:240px;">
+                <option value="">Todos los médicos</option>
+              </select>
+            </div>
+            <span id="filtro-deriv-contador" style="font-size:0.85em; color:#666; padding-bottom:6px;"></span>
+          </div>
           <table id="derivaciones-table">
             <thead>
               <tr>
@@ -1073,9 +1092,66 @@ if (tabHorarios) {
               `/api/derivaciones-sede?id_sede_dp=${sedeParaDerivaciones()}`,
             );
             const data = await response.json();
-            const lista = data.derivaciones || [];
-            derivacionesMostradas = lista;
-            if (data.status === "success" && lista.length > 0) {
+            if (data.status !== "success") throw new Error(data.message || "error");
+            derivacionesTodas = data.derivaciones || [];
+            llenarFiltroMedicosDerivacion();
+            renderDerivaciones();
+          } catch (error) {
+            derivacionesTableBody.innerHTML =
+              '<tr><td colspan="7" style="text-align:center;">Error al cargar las derivaciones.</td></tr>';
+          }
+        }
+
+        // ── Filtros de la pestaña Derivaciones (orden y médico) ──
+        let derivacionesTodas = [];
+
+        // Fecha de derivación como número para ordenar (hay filas viejas de
+        // Sheets con formato "Tue Jan 13 2026 ..." y nuevas "2026-10-23")
+        function valorFechaDerivacion(f) {
+          if (!f) return 0;
+          const dt = new Date(/^\d{4}-\d{2}-\d{2}$/.test(f) ? f + "T12:00:00" : f);
+          return isNaN(dt) ? 0 : dt.getTime();
+        }
+
+        function llenarFiltroMedicosDerivacion() {
+          const select = document.getElementById("filtro-deriv-medico");
+          const elegido = select.value;
+          const cuenta = {};
+          derivacionesTodas.forEach((d) => {
+            const clave = d.medico || "(sin nombre)";
+            if (!cuenta[clave]) cuenta[clave] = { n: 0, institucion: d.institucion };
+            cuenta[clave].n++;
+          });
+          const medicos = Object.keys(cuenta).sort((a, b) => a.localeCompare(b, "es"));
+          select.innerHTML =
+            `<option value="">Todos los médicos (${derivacionesTodas.length})</option>` +
+            medicos
+              .map(
+                (m) =>
+                  `<option value="${escHtml(m)}">${escHtml(m)}${cuenta[m].institucion ? " — " + escHtml(cuenta[m].institucion) : ""} (${cuenta[m].n})</option>`,
+              )
+              .join("");
+          // Mantener el médico elegido si sigue en la lista
+          if (elegido && cuenta[elegido]) select.value = elegido;
+        }
+
+        function renderDerivaciones() {
+          const medico = document.getElementById("filtro-deriv-medico").value;
+          const orden = document.getElementById("filtro-deriv-orden").value;
+
+          let lista = derivacionesTodas.filter((d) => !medico || (d.medico || "(sin nombre)") === medico);
+          if (orden === "nuevas") {
+            lista = [...lista].sort((a, b) => valorFechaDerivacion(b.fecha) - valorFechaDerivacion(a.fecha));
+          } else if (orden === "viejas") {
+            lista = [...lista].sort((a, b) => valorFechaDerivacion(a.fecha) - valorFechaDerivacion(b.fecha));
+          } // "prioridad": como viene del server (listos sin avisar primero)
+
+          derivacionesMostradas = lista;
+          document.getElementById("filtro-deriv-contador").textContent =
+            `${lista.length} derivación(es)`;
+
+          {
+            if (lista.length > 0) {
               const ESTILO_ESTADO = {
                 PENDIENTE: "background:#fff3cd; color:#856404;",
                 LISTO_PARA_CERRAR: "background:#dc3545; color:white;",
@@ -1114,14 +1190,13 @@ if (tabHorarios) {
                 })
                 .join("");
             } else {
-              derivacionesTableBody.innerHTML =
-                '<tr><td colspan="7" style="text-align:center;">No hay derivaciones recibidas.</td></tr>';
+              derivacionesTableBody.innerHTML = derivacionesTodas.length
+                ? '<tr><td colspan="7" style="text-align:center;">No hay derivaciones de ese médico.</td></tr>'
+                : '<tr><td colspan="7" style="text-align:center;">No hay derivaciones recibidas.</td></tr>';
             }
-          } catch (error) {
-            derivacionesTableBody.innerHTML =
-              '<tr><td colspan="7" style="text-align:center;">Error al cargar las derivaciones.</td></tr>';
           }
         }
+        window.renderDerivaciones = renderDerivaciones;
 async function cargarDiasBloqueados() {
   listaDiasBloqueados.innerHTML = "<li>Cargando...</li>";
   const ciudad = window.cityActiva;
