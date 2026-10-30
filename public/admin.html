@@ -786,6 +786,7 @@ if (payload && !payload.es_superuser) {
         citySelect.value = guardada;
         window.cityActiva = "sin_configurar";
         window.idSedeParaVerSuperuser = parseInt(guardada.replace("sede-", ""));
+        document.getElementById("tab-agregar")?.style.setProperty("display", "none");
         actualizarLabelsCiudad(guardada);
         recargarDatos();
       }
@@ -833,7 +834,16 @@ citySelect.addEventListener("change", (e) => {
   }
   localStorage.setItem("admin-ciudad-preferida", valor);
   actualizarLabelsCiudad(valor);
+  // "Agregar Días/Horarios" es de la turnera vieja (Google) de Santa Fe y
+  // Rosario: en las sedes nuevas se usa "Horarios de mi sede".
+  document
+    .getElementById("tab-agregar")
+    ?.style.setProperty("display", window.cityActiva === "sin_configurar" ? "none" : "");
   recargarDatos();
+  // Si está abierta la pestaña de horarios, mostrar los de la sede elegida
+  if (document.getElementById("vista-horarios")?.classList.contains("activa")) {
+    cargarHorariosSede();
+  }
 });
 
 function actualizarLabelsCiudad(ciudad) {
@@ -1734,8 +1744,18 @@ btnBloquear.addEventListener("click", async () => {
 
       const DIAS_NOMBRE = { 1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves", 5: "Viernes", 6: "Sábado", 7: "Domingo" };
 
+// Sede sobre la que se cargan/ven los horarios: el superuser usa la que
+// eligió en el selector (Delta, Coronda, Reconquista...); el PV, la suya.
+// (Antes el superuser siempre editaba su propia sede aunque el selector
+// mostrara otra.)
 function idSedeActual() {
-  return window.dpPayload.id_sede_dp; // el superuser lo resolvemos aparte, ver nota abajo
+  const p = window.dpPayload || {};
+  if (p.es_superuser) {
+    if (window.idSedeParaVerSuperuser) return window.idSedeParaVerSuperuser;
+    const MAPA_CITY_A_SEDE = { santafe: 1, rosario: 3 };
+    return MAPA_CITY_A_SEDE[window.cityActiva] || p.id_sede_dp;
+  }
+  return p.id_sede_dp;
 }
 
 async function cargarHorariosSede() {
